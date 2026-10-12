@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Poll until the owner widens the GitHub token, then create the private test repo once.
+# Usage: acci-wait-repo-access OWNER/REPO [seconds=900] [logfile]
+# Never prints the token; stops on success (201) or "already exists" (422).
+set -u
+REPO=${1:?OWNER/REPO}; LIMIT=${2:-900}; LOG=${3:-/dev/stdout}
+NAME=${REPO#*/}
+export GH_CONFIG_DIR=${GH_CONFIG_DIR:-/data/acci/secrets/gh}
+G=${ACCI_GH:-/data/acci/opt/gh}
+end=$(( $(date +%s) + LIMIT ))
+while [ "$(date +%s)" -lt "$end" ]; do
+  out=$("$G" api -X POST user/repos -f name="$NAME" -F private=true \
+        -f description="ACCI pipeline test lab" 2>&1); rc=$?
+  ts=$(date -u +%FT%TZ)
+  if [ $rc -eq 0 ]; then echo "$ts CREATED $REPO (private)" >>"$LOG"; exit 0; fi
+  if grep -q "name already exists" <<<"$out"; then echo "$ts EXISTS $REPO" >>"$LOG"; exit 0; fi
+  echo "$ts WAIT $(head -1 <<<"$out" | sed -E 's/(github_pat_|gh[pousr]_)[A-Za-z0-9_]+/\1***/g')" >>"$LOG"
+  sleep 30
+done
+echo "$(date -u +%FT%TZ) TIMEOUT" >>"$LOG"; exit 2

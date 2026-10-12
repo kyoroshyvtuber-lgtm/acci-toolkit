@@ -14,6 +14,7 @@ pushes to GitHub on its own branches, and builds in GitHub Actions (Linux / Andr
 | Runner | `acci run` | `RLIMIT_DATA/CPU/FSIZE`, wall timeout + process-group kill, clean env, optional `--no-net`, secrets dir hidden via mount namespace, redacted logs |
 | Secrets | `acci scan [--git]`, `acci redact` | tokens/keys/private keys/sensitive files in trees, archives (APK/whl/zip), git history, logs |
 | GitHub | `bin/acci-git`, `bin/acci-gh` | orchestrator-only; token in `secrets/` (0700), injected by the gh credential helper, output redacted |
+| GitHub (owner wait) | `bin/acci-wait-repo-access OWNER/REPO [sec] [log]` | polls every 30 s after the owner widens token permissions, creates the private test repo once (201/422 stop), never prints the token |
 | GitHub (fallback) | `acci payload/compare/synced` | when only the Notion GitHub MCP connector is available: push_files payloads + blob-SHA tree checks |
 | Cloud CI | `templates/ci-*.yml` + `report.py` | python, node, android, ios (unsigned sim + optional signed .ipa), windows-dotnet; report → PR comment |
 
