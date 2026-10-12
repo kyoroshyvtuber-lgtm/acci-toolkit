@@ -9,6 +9,9 @@ export GH_CONFIG_DIR=${GH_CONFIG_DIR:-/data/acci/secrets/gh}
 G=${ACCI_GH:-/data/acci/opt/gh}
 end=$(( $(date +%s) + LIMIT ))
 while [ "$(date +%s)" -lt "$end" ]; do
+  # owner may also create the repo manually and grant the token access only to it
+  if "$G" api "repos/$REPO" --jq .full_name >/dev/null 2>&1; then
+    echo "$(date -u +%FT%TZ) ACCESSIBLE $REPO" >>"$LOG"; exit 0; fi
   out=$("$G" api -X POST user/repos -f name="$NAME" -F private=true \
         -f description="ACCI pipeline test lab" 2>&1); rc=$?
   ts=$(date -u +%FT%TZ)
