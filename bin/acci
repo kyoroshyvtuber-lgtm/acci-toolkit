@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# ACCI toolkit entry point.
+TK="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd)"
+PYTHONPATH="$TK${PYTHONPATH:+:$PYTHONPATH}" exec python3 -m acci "$@"

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# Orchestrator-only GitHub CLI. The token lives in $ACCI_HOME/secrets (0700) and is hidden from
+# every project command by a mount namespace; output is redacted.
+ACCI_HOME="${ACCI_HOME:-/data/acci}"
+export GH_CONFIG_DIR="$ACCI_HOME/secrets/gh" GH_PROMPT_DISABLED=1 GH_NO_UPDATE_NOTIFIER=1
+set -o pipefail
+"$ACCI_HOME/opt/gh" "$@" 2>&1 | sed -E 's/(gh[pousr]_|github_pat_)[A-Za-z0-9_]+/[REDACTED]/g'

@@ -1,0 +1,58 @@
+# ACCI template: Node.js / web (Linux runner).
+name: ACCI CI (node)
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: acci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+env:
+  ACCI_LOG_DIR: acci-logs
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - id: versions
+        run: mkdir -p "$ACCI_LOG_DIR"; { node --version; npm --version; } 2>&1 | tee "$ACCI_LOG_DIR/versions.txt"
+      - id: install
+        run: npm ci 2>&1 | tee "$ACCI_LOG_DIR/install.log"
+      - id: audit
+        name: Dependency audit (report only)
+        continue-on-error: true
+        run: npm audit --audit-level=high 2>&1 | tee "$ACCI_LOG_DIR/audit.log"
+      - id: lint
+        run: npm run --if-present lint 2>&1 | tee "$ACCI_LOG_DIR/lint.log"
+      - id: test
+        run: npm test --if-present 2>&1 | tee "$ACCI_LOG_DIR/test.log"
+      - id: build
+        run: npm run --if-present build 2>&1 | tee "$ACCI_LOG_DIR/build.log"
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: ACCI report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCI_JOB_STATUS: ${{ job.status }}
+          ACCI_STEPS: ${{ toJSON(steps) }}
+          ACCI_TITLE: node
+          ACCI_ARTIFACT_PATHS: dist/**
+          ACCI_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ACCI_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+        run: python3 .acci/report.py

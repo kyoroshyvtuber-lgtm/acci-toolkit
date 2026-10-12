@@ -1,0 +1,51 @@
+# ACCI template: Windows (.NET) EXE on a GitHub-hosted Windows runner.
+name: ACCI Windows
+on:
+  push:
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: acci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash
+env:
+  ACCI_LOG_DIR: acci-logs
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - id: versions
+        run: mkdir -p "$ACCI_LOG_DIR"; dotnet --info 2>&1 | head -30 | tee "$ACCI_LOG_DIR/versions.txt"
+      - id: test
+        run: dotnet test --logger "junit;LogFilePath=test-results.xml" 2>&1 | tee "$ACCI_LOG_DIR/test.log"
+      - id: build
+        run: dotnet publish -c Release -r win-x64 --self-contained false -o out 2>&1 | tee "$ACCI_LOG_DIR/build.log"
+      - id: verify
+        run: ls out/*.exe && sha256sum out/*.exe 2>&1 | tee "$ACCI_LOG_DIR/verify.log"
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ github.sha }}
+          path: out/
+          if-no-files-found: error
+          retention-days: 14
+      - name: ACCI report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCI_JOB_STATUS: ${{ job.status }}
+          ACCI_STEPS: ${{ toJSON(steps) }}
+          ACCI_TITLE: windows
+          ACCI_ARTIFACT_PATHS: out/*.exe
+          ACCI_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ACCI_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+        run: python .acci/report.py
