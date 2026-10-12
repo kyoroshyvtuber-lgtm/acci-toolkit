@@ -46,5 +46,9 @@ $A state <proj> --step report --link pr=<url> --link run=<url>
 ## Restore on a fresh sandbox
 1. Restore `toolkit/` (GitHub repo `acci-toolkit` or the ZIP attached to the Notion hub page).
 2. Install gh: see `bin/install-gh.sh` (verifies the release checksum).
-3. Owner re-authorizes GitHub (token → `secrets/gh` via `gh auth login --with-token`).
+3. Owner re-authorizes GitHub, preferably without pasting tokens into chat: run
+   `GH_CONFIG_DIR=/data/acci/secrets/gh BROWSER=true opt/gh auth login --web -s workflow` in the background,
+   give the owner the one-time code for https://github.com/login/device (valid 15 min). Scopes: repo, workflow,
+   read:org, gist; revoke at github.com/settings/applications. Fine-grained PAT alternative needs
+   Administration/Contents/Pull requests/Actions/Workflows RW (Administration only to create repos).
 4. Project state: Notion «ACCI · Задачи» row + branch on GitHub (`acci/*`) + `state.json` if present.
