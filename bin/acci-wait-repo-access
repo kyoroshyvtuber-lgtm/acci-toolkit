@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Poll until the owner widens the GitHub token, then create the private test repo once.
+# Administrative helper: only run after explicit owner approval to create a private repo.
+# Poll until the owner widens access, then create the private test repo once.
 # Usage: acci-wait-repo-access OWNER/REPO [seconds=900] [logfile]
 # Never prints the token; stops on success (201) or "already exists" (422).
 set -u
 REPO=${1:?OWNER/REPO}; LIMIT=${2:-900}; LOG=${3:-/dev/stdout}
 NAME=${REPO#*/}
-export GH_CONFIG_DIR=${GH_CONFIG_DIR:-/data/acci/secrets/gh}
-G=${ACCI_GH:-/data/acci/opt/gh}
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+acci_find_gh || exit $?
+G=$ACCI_GH_BIN
 end=$(( $(date +%s) + LIMIT ))
 while [ "$(date +%s)" -lt "$end" ]; do
   # owner may also create the repo manually and grant the token access only to it

@@ -11,7 +11,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import __version__, detect, ghsync, runner, safezip, secretscan, workspace
+from . import __version__, detect, ghsync, handoff, runner, safezip, secretscan, workspace
 
 TEMPLATES = Path(__file__).with_name("templates")
 NOT_SECRETS = {"unreadable-archive"}
@@ -41,13 +41,17 @@ def c_doctor(a):
     tools = {name: _ver(cmd) for name, cmd in {
         "python3": ["python3", "--version"], "node": ["node", "--version"], "npm": ["npm", "--version"],
         "git": ["git", "--version"], "java": ["java", "-version"], "docker": ["docker", "--version"],
-        "gh": [str(workspace.HOME / "opt" / "gh"), "--version"], "gradle": ["gradle", "--version"],
+        "gh": [str(workspace.HOME / "opt" / "gh") if (workspace.HOME / "opt" / "gh").is_file()
+               else "gh", "--version"], "gradle": ["gradle", "--version"],
         "dotnet": ["dotnet", "--version"], "go": ["go", "version"], "cargo": ["cargo", "--version"],
         "zip": ["zip", "-v"], "curl": ["curl", "--version"], "unshare": ["unshare", "--version"]}.items()}
     net = {}
-    for url in ("https://api.github.com", "https://github.com", "https://pypi.org/simple/",
+    for url in (() if a.offline else ("https://api.github.com", "https://github.com", "https://pypi.org/simple/",
                 "https://registry.npmjs.org/", "https://dl.google.com/android/repository/repository2-3.xml",
-                "https://services.gradle.org/versions/current"):
+                "https://services.gradle.org/versions/current")):
+        if not shutil.which("curl"):
+            net[url] = "curl is not installed"
+            continue
         r = subprocess.run(["curl", "-sS", "-m", "10", "-o", "/dev/null", "-w", "%{http_code}", url],
                            capture_output=True, text=True)
         net[url] = r.stdout.strip() if r.returncode == 0 else (r.stderr.strip()[:80] or "error")
@@ -221,6 +225,14 @@ def c_template(a):
         sys.stdout.write(f.read_text(encoding="utf-8"))
 
 
+def c_handoff(a):
+    emit(handoff.export(a.project))
+
+
+def c_resume(a):
+    emit(handoff.resume(a.project, a.source, replace=a.replace))
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="acci", description=f"ACCI toolkit {__version__}")
     sub = p.add_subparsers(dest="command", required=True)
@@ -232,7 +244,8 @@ def build_parser() -> argparse.ArgumentParser:
             sp.add_argument(arg)
         return sp
 
-    cmd("doctor", c_doctor, "diagnose sandbox capabilities")
+    sp = cmd("doctor", c_doctor, "diagnose sandbox capabilities")
+    sp.add_argument("--offline", action="store_true", help="skip network probes")
     sp = cmd("init", c_init, "create an isolated project workspace", "project")
     sp.add_argument("--repo")
     sp.add_argument("--branch")
@@ -282,6 +295,10 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--all", action="store_true", help="also report local files outside listed dirs")
     sp = cmd("template", c_template, "print/copy a CI template", "name")
     sp.add_argument("--out")
+    cmd("handoff", c_handoff, "export reviewed task state into the project's .acci/ directory", "project")
+    sp = cmd("resume", c_resume, "restore task state from a repository handoff", "project")
+    sp.add_argument("--from", dest="source", required=True, help="path to .acci/handoff.json")
+    sp.add_argument("--replace", action="store_true", help="explicitly replace an existing nonempty task")
     return p
 
 

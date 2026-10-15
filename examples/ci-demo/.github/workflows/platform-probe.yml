@@ -1,0 +1,26 @@
+name: ACCI platform probe
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  linux-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo "image: $ImageOS $ImageVersion"; lsb_release -ds; java -version 2>&1 | head -1
+          echo "ANDROID_HOME=$ANDROID_HOME"; ls "$ANDROID_HOME/platforms" | tail -3; ls "$ANDROID_HOME/build-tools" | tail -3
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - shell: bash
+        run: |
+          echo "image: $ImageOS $ImageVersion"; dotnet --list-sdks | tail -3
+  macos-ios:
+    runs-on: macos-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          echo "image: $ImageOS $ImageVersion"; sw_vers; xcodebuild -version; xcrun simctl list runtimes | grep -i ios | tail -3

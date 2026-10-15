@@ -70,7 +70,11 @@ def run(project: str, cmd, cwd=None, timeout: int = 1800, mem_mb: int = 3072, cp
     shown = secretscan.redact(cmd if isinstance(cmd, str) else shlex.join(cmd))
     if not network and not unshare_ok():
         raise RuntimeError("network isolation unavailable (no unprivileged user namespaces)")
-    hidden = unshare_ok() and secrets_dir().is_dir()
+    secret_path = secrets_dir()
+    if secret_path.is_dir() and any(secret_path.iterdir()) and not unshare_ok():
+        raise RuntimeError("credential directory cannot be hidden: user namespaces unavailable; "
+                           "use a separate credential-free container/VM, not an unprotected fallback")
+    hidden = unshare_ok() and secret_path.is_dir()
     if hidden or not network:  # orchestrator credentials are invisible to project commands
         flags = "-rm" + ("" if network else "n")
         argv = (["unshare", flags, "--", "bash", "-c", HIDE, str(secrets_dir()), *argv] if hidden

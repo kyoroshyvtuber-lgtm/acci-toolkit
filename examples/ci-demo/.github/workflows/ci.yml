@@ -1,0 +1,73 @@
+name: ACCI CI (python)
+on:
+  push:
+    paths-ignore: ["android/**", "ios/**"]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: acci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+defaults:
+  run:
+    shell: bash   # bash -eo pipefail: a failing command fails the step even when piped to tee
+env:
+  ACCI_LOG_DIR: acci-logs
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: versions
+        name: Toolchain versions
+        run: |
+          mkdir -p "$ACCI_LOG_DIR"
+          { echo "commit: $GITHUB_SHA"; echo "image: $ImageOS $ImageVersion"; python --version; pip --version; } 2>&1 | tee "$ACCI_LOG_DIR/versions.txt"
+      - id: install
+        name: Install
+        run: |
+          { python -m pip install --upgrade pip build pytest
+            if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            if [ -f pyproject.toml ] || [ -f setup.py ]; then pip install -e .; fi; } 2>&1 | tee "$ACCI_LOG_DIR/install.log"
+      - id: lint
+        name: Static checks
+        run: python -m compileall -q . 2>&1 | tee "$ACCI_LOG_DIR/lint.log"
+      - id: test
+        name: Tests
+        run: python -m pytest -q --junitxml=test-results.xml 2>&1 | tee "$ACCI_LOG_DIR/test.log"
+      - id: build
+        name: Build
+        run: |
+          { python -m build --outdir dist
+            python -m zipapp src -m "acci_calc.__main__:run" -p "/usr/bin/env python3" -o dist/acci-calc.pyz; } 2>&1 | tee "$ACCI_LOG_DIR/build.log"
+      - id: verify
+        name: Verify artifacts
+        run: |
+          { for f in dist/*.whl; do python -m zipfile -t "$f"; done
+            python dist/acci-calc.pyz --version
+            test "$(python dist/acci-calc.pyz 6 '*' 7)" = 42 && echo "pyz smoke test: 6*7=42 OK"
+            rc=0; python dist/acci-calc.pyz 1 % 0 || rc=$?; test "$rc" = 2 && echo "pyz error exit code: $rc OK"
+            sha256sum dist/*; } 2>&1 | tee "$ACCI_LOG_DIR/verify.log"
+      - id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
+          if-no-files-found: error
+          retention-days: 14
+      - name: ACCI report
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACCI_JOB_STATUS: ${{ job.status }}
+          ACCI_STEPS: ${{ toJSON(steps) }}
+          ACCI_TITLE: python
+          ACCI_ARTIFACT_PATHS: dist/*
+          ACCI_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
+          ACCI_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
+        run: python3 .acci/report.py

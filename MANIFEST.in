@@ -1,0 +1,14 @@
+include README.md AGENTS.md CONTRIBUTING.md LICENSE
+include .acci/handoff.json .acci/HANDOFF.md
+recursive-include docs *.md
+recursive-include bin *
+recursive-include scripts *.py
+recursive-include acci/templates *.yml *.py
+recursive-include examples *.py *.toml *.md *.yml *.kts *.properties *.xml *.java *.swift
+include examples/ci-demo/.gitignore
+recursive-include examples/ci-demo/.github *.yml
+recursive-include examples/ci-demo/.acci *.py
+recursive-include .github/workflows *.yml
+global-exclude *.pyc
+prune examples/ci-demo/src/acci_calc/__pycache__
+prune examples/ci-demo/.pytest_cache

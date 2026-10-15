@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "toolkit_version": "0.2.0",
+  "exported_at": "2026-10-15T13:24:39Z",
+  "state": {
+    "task": "Prepare a portable GitHub-based ACCI toolkit and an owner-approved public open-source release",
+    "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
+    "branch": "acci/portable-agent-handoff",
+    "stage": "publication:approved",
+    "plan": [
+      "portable-implementation",
+      "local-validation",
+      "cloud-validation",
+      "license-approval",
+      "merge",
+      "public-publication"
+    ],
+    "remaining": [
+      "merge",
+      "public-publication"
+    ],
+    "steps": [
+      {
+        "step": "portable-implementation",
+        "status": "done",
+        "note": "CLI packaging, AGENTS.md, access/runbook/security docs, examples, handoff/resume, CI"
+      },
+      {
+        "step": "local-validation",
+        "status": "done",
+        "note": "Fresh GitHub clone: 55 toolkit tests and 14 demo tests; clean installed wheel smoke passed"
+      },
+      {
+        "step": "cloud-validation",
+        "status": "done",
+        "note": "Run 38740836743: Python 3.10/3.13 passed; 2 namespace tests skipped per hosted job; downloaded artifacts verified"
+      },
+      {
+        "step": "publication",
+        "status": "blocked",
+        "note": "Owner must choose a license and approve merge/publication; MIT is proposed, not granted"
+      },
+      {
+        "ts": "2026-10-15T13:24:39Z",
+        "step": "license-approval",
+        "status": "done",
+        "note": "Owner explicitly approved MIT, merging PR #1, and public repository visibility"
+      },
+      {
+        "ts": "2026-10-15T13:24:39Z",
+        "step": "publication",
+        "status": "start",
+        "note": "Checkpoint before approved administrative operations; inspect live PR/visibility before repeating them"
+      }
+    ],
+    "attempts": {
+      "missing-smoke-script-commit": 1
+    },
+    "links": {
+      "repo": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit",
+      "pr": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/1",
+      "verified_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38740836743"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 # ACCI template: iOS on a GitHub-hosted macOS runner (no Mac needed).
-# Unsigned simulator build always works. Signed device build (.ipa) runs only when the owner has
+# Default target: an unsigned simulator build of a valid, compatible project.
+# Signed device build (.ipa) runs only when the owner has
 # added these encrypted Actions secrets in repo Settings -> Secrets (never committed, never logged):
 #   IOS_P12_BASE64, IOS_P12_PASSWORD, IOS_PROFILE_BASE64, IOS_TEAM_ID, KEYCHAIN_PASSWORD
 name: ACCI iOS

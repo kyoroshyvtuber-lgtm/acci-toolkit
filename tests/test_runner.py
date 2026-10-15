@@ -46,6 +46,15 @@ def test_cwd_confined_to_project(proj):
         runner.run("demo", "true", cwd="/tmp")
 
 
+def test_credentials_fail_closed_without_namespaces(proj, tmp_path, monkeypatch):
+    (tmp_path / "secrets").mkdir()
+    (tmp_path / "secrets" / "credential").write_text("private test fixture")
+    monkeypatch.setattr(runner, "unshare_ok", lambda: False)
+    with pytest.raises(RuntimeError, match="credential directory cannot be hidden"):
+        runner.run("demo", "echo must-not-run")
+    assert not list((proj / "logs").glob("cmd-*"))
+
+
 @pytest.mark.skipif(not runner.unshare_ok(), reason="no user namespaces")
 def test_no_network_mode(proj):
     res = runner.run("demo", "curl -sS -m 5 -o /dev/null https://github.com", network=False, timeout=30)

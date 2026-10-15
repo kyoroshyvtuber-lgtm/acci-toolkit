@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "acci-calc"
+version = "0.2.0"
+description = "Demo CLI used to validate the ACCI build pipeline"
+requires-python = ">=3.9"
+
+[project.scripts]
+acci-calc = "acci_calc.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
