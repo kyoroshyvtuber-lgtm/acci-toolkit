@@ -5,7 +5,7 @@ Give an approved coding agent this repository, a task, and access to the target
 GitHub project. It can follow the same documented edit → test → build →
 inspect → fix → verify → PR workflow without this chat or a Notion account.
 
-**Publication status:** the portable version is being prepared on
+**Publication status:** the portable version is ready for owner review on
 `acci/portable-agent-handoff`. Public visibility, a distribution license, and
 merging into the default branch require the owner's final approval.
 Do not describe the current private/unlicensed snapshot as a released
