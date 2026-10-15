@@ -1,65 +1,69 @@
 {
   "schema_version": 1,
-  "toolkit_version": "0.2.0",
-  "exported_at": "2026-10-15T13:24:39Z",
+  "toolkit_version": "0.3.0",
+  "exported_at": "2026-10-15T15:54:22Z",
   "state": {
-    "task": "Prepare a portable GitHub-based ACCI toolkit and an owner-approved public open-source release",
+    "task": "Improve ACCI for agent-assisted iOS apps/games: native simulator validation, guarded IPA export, game profiles and opt-in bounded task executor",
     "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
-    "branch": "acci/portable-agent-handoff",
-    "stage": "publication:approved",
+    "branch": "acci/ios-agent-readiness",
+    "stage": "verification:complete-awaiting-review",
     "plan": [
-      "portable-implementation",
+      "implementation",
       "local-validation",
-      "cloud-validation",
-      "license-approval",
-      "merge",
-      "public-publication"
+      "python-godot-cloud",
+      "ios-artifact-verification",
+      "owner-review-and-merge"
     ],
     "remaining": [
-      "merge",
-      "public-publication"
+      "owner-review-and-merge"
     ],
     "steps": [
       {
-        "step": "portable-implementation",
+        "step": "implementation",
         "status": "done",
-        "note": "CLI packaging, AGENTS.md, access/runbook/security docs, examples, handoff/resume, CI"
+        "note": "v0.3 implementation plus SDK-bounded runtime selection and immutable artifact-ID/bundle-digest provenance; inspect current branch HEAD. Optional provider/signing gates remain disabled"
       },
       {
         "step": "local-validation",
         "status": "done",
-        "note": "Fresh GitHub clone: 55 toolkit tests and 14 demo tests; clean installed wheel smoke passed"
+        "note": "111 toolkit + 14 demo tests passed; anonymous public clone at bc5d603 independently bootstrapped and passed all tests with empty HOME/no inherited credentials. Downloaded current wheel passed isolated helper/offline-preview/handoff smoke; source/history findings reviewed"
       },
       {
-        "step": "cloud-validation",
+        "step": "python-godot-cloud",
         "status": "done",
-        "note": "Run 38740836743: Python 3.10/3.13 passed; 2 namespace tests skipped per hosted job; downloaded artifacts verified"
+        "note": "Toolkit run 38761755776: Python 3.10/3.13 each 109 passed, 2 namespace skips, 14 demo passes; downloaded packages/JUnit/integrity checked. Godot run 38758019951: four gameplay checks, export/package launch, downloaded hash and relaunch checked; game files unchanged since c8ee68d"
       },
       {
-        "step": "publication",
+        "step": "ios-artifact-verification",
+        "status": "done",
+        "note": "Run 38761755508 at bc5d603: Xcode 16.4, SDK/runtime 18.5, iPhone 16/x86_64. Three unit + one UI tests passed, zero failures/skips; install/launch/screenshot/app ZIP succeeded. Downloaded SHA256SUMS, app/xcresult ZIP integrity, simulator metadata checked and screenshot viewed. Previous SDK/runtime accessibility failure preserved in docs/VALIDATION.md"
+      },
+      {
+        "step": "owner-review-and-merge",
         "status": "blocked",
-        "note": "Owner must choose a license and approve merge/publication; MIT is proposed, not granted"
+        "note": "Open the PR for this branch if none exists, inspect latest head/checks and obtain owner merge approval. Do not duplicate an existing PR. Earlier approval covered PR #1/public MIT publication only"
       },
       {
-        "ts": "2026-10-15T13:24:39Z",
-        "step": "license-approval",
-        "status": "done",
-        "note": "Owner explicitly approved MIT, merging PR #1, and public repository visibility"
+        "step": "optional-provider-activation",
+        "status": "blocked",
+        "note": "Owner must choose provider/model/spending limits, privately add ACCI_MODEL_KEY and enable committed policy + repository variable; no paid calls made"
       },
       {
-        "ts": "2026-10-15T13:24:39Z",
-        "step": "publication",
-        "status": "start",
-        "note": "Checkpoint before approved administrative operations; inspect live PR/visibility before repeating them"
+        "step": "optional-device-signing",
+        "status": "blocked",
+        "note": "Owner team/bundle/certificate/profile and private GitHub environment setup required; no live IPA, physical-device test or store upload performed"
       }
     ],
     "attempts": {
-      "missing-smoke-script-commit": 1
+      "macos-arm64-capacity": 1,
+      "xcode-sdk-runtime-ui-accessibility": 1
     },
     "links": {
       "repo": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit",
-      "pr": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/1",
-      "verified_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38740836743"
+      "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755776",
+      "godot_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019951",
+      "ios_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755508",
+      "ios_prior_failure": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836"
     }
   }
 }

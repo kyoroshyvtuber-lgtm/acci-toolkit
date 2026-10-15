@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "provider": "",
+  "model": "",
+  "context_paths": [
+    "examples/ci-demo/src/",
+    "examples/ci-demo/tests/",
+    "examples/ci-demo/ios/Sources/",
+    "examples/ci-demo/ios/Tests/",
+    "examples/ci-demo/ios/UITests/"
+  ],
+  "write_paths": [
+    "examples/ci-demo/src/",
+    "examples/ci-demo/ios/Sources/"
+  ],
+  "max_context_bytes": 90000,
+  "max_file_bytes": 24000,
+  "max_changed_files": 4,
+  "max_output_tokens": 4096
+}

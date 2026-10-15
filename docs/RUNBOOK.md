@@ -40,17 +40,20 @@ $H pr create -R OWNER/REPO --head acci/my-task --base main \
 
 Use the repository's actual default branch, not necessarily `main`.
 Do not blindly stage everything or discard unrelated changes.
-Export the appropriate templates **and** their report helper if the target
+Export the appropriate templates **and** their required helpers if the target
 does not already have CI:
 
 ```bash
 $A template ci-ios.yml --out .github/workflows/ios.yml
-$A template report.py --out .acci/report.py
+$A template ios.py --out .acci/ios.py
+# Other older CI templates use report.py; export it if that template requires it.
 ```
 
 Review triggers, runner cost, `IOS_DIR`, scheme, permissions, and signing before
 committing. The iOS template produces an unsigned simulator app by default;
-its optional signing path requires separate owner setup and validation.
+it also runs the scheme's tests and records launch/screenshot evidence.
+Signing is a **separate** manual workflow requiring owner setup and validation.
+See [iOS](IOS.md), [game profiles](GAMES.md), and [optional autonomy](AUTONOMY.md).
 
 ```bash
 $H run list -R OWNER/REPO --branch acci/my-task --limit 5

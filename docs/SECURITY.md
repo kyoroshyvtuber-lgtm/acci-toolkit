@@ -29,3 +29,30 @@
 Report a vulnerability privately to the repository owner through an available
 private channel. Do not post an unredacted secret in an issue. Revoke/rotate
 exposed credentials before discussing remediation publicly.
+
+## Optional proposal workflow
+
+The committed agent policy is disabled and has no provider/model. A separate
+repository-variable gate, owner actor and default-branch checks are required.
+Provider-key, generated-code validation and PR-write jobs run on separate
+ephemeral machines. The model returns bounded source-only JSON, never shell
+commands. Tests, policy, CI, dependencies and signing are not writable.
+See [the complete boundaries](AUTONOMY.md). Secret scanning and passing tests do
+not prove generated code is harmless; humans must review the diff.
+
+The publisher downloads the immutable proposal artifact ID and checks the exact
+bundle SHA-256 from the trusted proposal job, then rechecks base/policy/file hashes.
+It does not accept a replacement selected by artifact name or an artifact
+produced by a machine that executed generated source. Checkout authentication
+is not persisted. Validation still runs on hosted infrastructure with runtime/
+artifact tokens; it is not a claim of perfect hostile-code isolation.
+
+## Signing
+
+Signing is separate, manual, disabled and limited to reviewed default-branch
+source. Use the `apple-signing` environment and disposable hosted runners.
+Check profile/certificate identity and expiry; never print private material.
+Cleanup is best effort under hard process termination; the helper fails when
+it detects cleanup errors. Never reuse a host with incomplete cleanup.
+Signed artifacts can contain profile/device identifiers; visibility requires
+explicit owner acknowledgement. See [iOS signing](IOS.md).

@@ -1,0 +1,63 @@
+# Manual trusted-default-branch ONLY. Requires an owner-managed EPHEMERAL macOS
+# runner with exact licensed Unity Editor, iOS module and Xcode preinstalled.
+# Do not attach a persistent personal machine or execute fork PRs here.
+# Copy AcciBuild.cs -> Assets/Editor/, games.py -> .acci/games.py.
+name: ACCI Unity iOS export
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    if: >-
+      vars.ACCI_UNITY_ENABLED == 'true' &&
+      github.actor == github.repository_owner &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: [self-hosted, macOS, acci-unity-ephemeral]
+    timeout-minutes: 60
+    env:
+      UNITY_EDITOR: ${{ vars.UNITY_EDITOR_PATH }}
+      GAME_DIR: game
+      ACCI_UNITY_EXPORT: ${{ runner.temp }}/unity-export/Xcode
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Validate owner installation, tests and build entry point
+        shell: bash
+        run: |
+          test -x "$UNITY_EDITOR"
+          test -f "$GAME_DIR/Assets/Editor/AcciBuild.cs"
+          mkdir -p "$RUNNER_TEMP/unity-export"
+      - name: EditMode and PlayMode tests (no premature -quit)
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$UNITY_EDITOR" -batchmode -projectPath "$GITHUB_WORKSPACE/$GAME_DIR" \
+            -runTests -testPlatform EditMode -testResults "$RUNNER_TEMP/unity-export/editmode.xml" \
+            -logFile "$RUNNER_TEMP/unity-export/editmode.log"
+          "$UNITY_EDITOR" -batchmode -projectPath "$GITHUB_WORKSPACE/$GAME_DIR" \
+            -runTests -testPlatform PlayMode -testResults "$RUNNER_TEMP/unity-export/playmode.xml" \
+            -logFile "$RUNNER_TEMP/unity-export/playmode.log"
+          python3 .acci/games.py verify-unity-tests "$RUNNER_TEMP/unity-export/editmode.xml" \
+            "$RUNNER_TEMP/unity-export/playmode.xml"
+      - name: Export Xcode project, never sign/upload
+        shell: bash
+        run: |
+          "$UNITY_EDITOR" -batchmode -quit -projectPath "$GITHUB_WORKSPACE/$GAME_DIR" \
+            -buildTarget iOS -executeMethod AcciBuild.BuildIOS \
+            -logFile "$RUNNER_TEMP/unity-export/export.log"
+          test -d "$ACCI_UNITY_EXPORT/Unity-iPhone.xcodeproj"
+          ditto -c -k --keepParent "$ACCI_UNITY_EXPORT" "$RUNNER_TEMP/unity-export/Xcode.zip"
+          shasum -a 256 "$RUNNER_TEMP/unity-export/Xcode.zip" > "$RUNNER_TEMP/unity-export/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unity-xcode-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/unity-export/*.xml
+            ${{ runner.temp }}/unity-export/*.log
+            ${{ runner.temp }}/unity-export/*.zip
+            ${{ runner.temp }}/unity-export/SHA256SUMS
+          retention-days: 14

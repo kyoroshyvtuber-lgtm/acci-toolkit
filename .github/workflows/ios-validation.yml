@@ -1,0 +1,44 @@
+name: iOS simulator validation
+on:
+  push:
+    branches: [main, "acci/**"]
+    paths: ["acci/ios.py", "examples/ci-demo/ios/**", ".github/workflows/ios-validation.yml"]
+  pull_request:
+    paths: ["acci/ios.py", "examples/ci-demo/ios/**", ".github/workflows/ios-validation.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ios-validation-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  simulator:
+    # Standard Intel VM with more memory for XCTest/UI tests; log exact Xcode.
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install XcodeGen if absent
+        run: command -v xcodegen || brew install xcodegen
+      - name: Unit tests, UI tests, install, launch, screenshot and package
+        run: |
+          python3 acci/ios.py simulator examples/ci-demo/ios --scheme App \
+            --generate --out "$RUNNER_TEMP/ios-evidence"
+      - name: Preserve evidence even when tests fail
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-simulator-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/ios-evidence/*.log
+            ${{ runner.temp }}/ios-evidence/*.json
+            ${{ runner.temp }}/ios-evidence/*.png
+            ${{ runner.temp }}/ios-evidence/*.zip
+            ${{ runner.temp }}/ios-evidence/SHA256SUMS
+          if-no-files-found: warn
+          retention-days: 14

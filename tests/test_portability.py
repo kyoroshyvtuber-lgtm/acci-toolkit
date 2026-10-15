@@ -13,6 +13,18 @@ def test_cli_handoff_commands():
     args = parser.parse_args(["resume", "demo", "--from", "handoff.json"])
     assert args.source == "handoff.json" and not args.replace
     assert parser.parse_args(["doctor", "--offline"]).offline
+    assert parser.parse_args(["ios", "preflight"]).ios_command == "preflight"
+    assert parser.parse_args(["game", "plan", "."]).game_command == "plan"
+    assert parser.parse_args(["agent", "preview", "--task-file", "task.txt", "--out", "context.json"]).agent_command == "preview"
+
+
+def test_extractable_helpers_and_new_templates(tmp_path):
+    for name in ("ios.py", "games.py", "install-godot.sh", "AcciBuild.cs",
+                 "ci-ios-sign.yml", "ci-godot.yml", "ci-unity.yml"):
+        dest = tmp_path / name
+        assert cli.main(["template", name, "--out", str(dest)]) == 0
+        assert dest.is_file() and dest.stat().st_size > 100
+    assert cli.main(["template", "../cli.py"]) == 2
 
 
 def test_source_launcher_works_outside_checkout(tmp_path):

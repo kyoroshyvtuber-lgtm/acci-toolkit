@@ -28,7 +28,7 @@ version = {attr = "acci.__version__"}
 include = ["acci*"]
 
 [tool.setuptools.package-data]
-acci = ["templates/*.yml", "templates/*.py"]
+acci = ["templates/*.yml", "templates/*.py", "templates/*.sh", "templates/*.cs", "templates/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
