@@ -1,0 +1,45 @@
+name: Godot game validation
+on:
+  push:
+    branches: [main, "acci/**"]
+    paths: ["examples/godot-demo/**", "acci/templates/install-godot.sh", ".github/workflows/game-validation.yml"]
+  pull_request:
+    paths: ["examples/godot-demo/**", "acci/templates/install-godot.sh", ".github/workflows/game-validation.yml"]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: game-validation-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  game:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install pinned checksum-verified Godot editor
+        env:
+          ACCI_HOME: ${{ runner.temp }}/acci
+        run: bash acci/templates/install-godot.sh
+      - name: Import, gameplay tests, resource export and packaged launch smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="$RUNNER_TEMP/acci/opt/godot-4.7.2/godot"
+          PROJECT="$GITHUB_WORKSPACE/examples/godot-demo"
+          mkdir -p "$RUNNER_TEMP/game-evidence"
+          "$GODOT" --headless --path "$PROJECT" --import 2>&1 | tee "$RUNNER_TEMP/game-evidence/import.log"
+          "$GODOT" --headless --path "$PROJECT" --script tests/score_test.gd 2>&1 | tee "$RUNNER_TEMP/game-evidence/tests.log"
+          "$GODOT" --headless --path "$PROJECT" --export-pack Linux "$RUNNER_TEMP/game-evidence/acci-demo.pck" 2>&1 | tee "$RUNNER_TEMP/game-evidence/export.log"
+          cd "$RUNNER_TEMP/game-evidence"
+          "$GODOT" --headless --main-pack acci-demo.pck --quit-after 2 2>&1 | tee launch.log
+          grep -F "ACCI game fixture ready: energy=1" launch.log
+          sha256sum acci-demo.pck > SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: godot-evidence-${{ github.sha }}
+          path: ${{ runner.temp }}/game-evidence/
+          retention-days: 14

@@ -8,7 +8,8 @@ from collections import Counter
 from pathlib import Path
 
 SKIP = {".git", "node_modules", ".gradle", "build", "dist", "out", ".idea", ".vscode", ".venv", "venv",
-        "__pycache__", "Pods", "DerivedData", "target", ".dart_tool", ".next", "coverage", ".expo"}
+        "__pycache__", "Pods", "DerivedData", "target", ".dart_tool", ".next", "coverage", ".expo",
+        ".godot", "Library", "Temp", "Obj", "Logs"}
 TEST_FILE = re.compile(r"(^|/)(test_[^/]+\.py|[^/]+_test\.(py|go)|[^/]+\.(test|spec)\.[jt]sx?|[^/]+Tests?\.(swift|kt|java|cs))$")
 TEST_DIR = re.compile(r"(^|/)(tests?|__tests__|androidTest|src/test)/")
 DOC = re.compile(r"(?i)^(readme|contributing|building|install|changelog|license)(\.[a-z]+)?$")
@@ -90,6 +91,19 @@ def detect(root, cap: int = 50_000) -> dict:
             artifacts="*.app (simulator); signed .ipa needs the owner's Apple certificate + profile")
     if "Package.swift" in fset:
         add("swiftpm", ["Package.swift"], "macos-latest", build="swift build", test="swift test")
+    if named("project.godot"):
+        add("godot", named("project.godot"), "ubuntu-latest (headless) / macos-latest (iOS)",
+            setup="Matching Godot editor + export templates; configure export_presets.cfg",
+            build="godot --headless --path <project> --export-debug iOS <output.zip>",
+            test="Run the project's gameplay test script; import alone is not a test",
+            artifacts="Xcode project for iOS; signed IPA is a separate owner-configured step")
+    unity = [f for f in files if f.endswith("ProjectSettings/ProjectVersion.txt")]
+    if unity:
+        add("unity", unity, "owner-licensed Editor / macos with iOS Build Support",
+            setup="Read ProjectVersion.txt; use the exact Editor version and a valid owner license",
+            test="Unity -batchmode -projectPath <project> -runTests -testPlatform EditMode -testResults results.xml",
+            build="Unity -batchmode -quit -projectPath <project> -buildTarget iOS -executeMethod AcciBuild.BuildIOS",
+            artifacts="Xcode export; simulator/device validation and signing are separate")
     if pkg and "react-native" not in deps:
         scripts = pkg.get("scripts") or {}
         pm = "pnpm" if "pnpm-lock.yaml" in fset else "yarn" if "yarn.lock" in fset else "npm"

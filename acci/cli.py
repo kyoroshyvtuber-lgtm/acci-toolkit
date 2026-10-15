@@ -11,7 +11,7 @@ import sys
 import time
 from pathlib import Path
 
-from . import __version__, detect, ghsync, handoff, ios, runner, safezip, secretscan, workspace
+from . import __version__, agent, detect, games, ghsync, handoff, ios, runner, safezip, secretscan, workspace
 
 TEMPLATES = Path(__file__).with_name("templates")
 NOT_SECRETS = {"unreadable-archive"}
@@ -216,7 +216,7 @@ def c_compare(a):
 def c_template(a):
     if Path(a.name).name != a.name:
         raise ValueError("template name must be a filename, not a path")
-    f = Path(__file__).with_name("ios.py") if a.name == "ios.py" else TEMPLATES / a.name
+    f = Path(__file__).with_name(a.name) if a.name in ("ios.py", "games.py") else TEMPLATES / a.name
     if not f.is_file():
         raise FileNotFoundError(f"no template {a.name!r}; available: {sorted(p.name for p in TEMPLATES.iterdir())}")
     if a.out:
@@ -302,6 +302,8 @@ def build_parser() -> argparse.ArgumentParser:
     sp.add_argument("--from", dest="source", required=True, help="path to .acci/handoff.json")
     sp.add_argument("--replace", action="store_true", help="explicitly replace an existing nonempty task")
     ios.add_parsers(sub.add_parser("ios", help="iOS simulator checks and explicit signed IPA export"))
+    agent.add_parsers(sub.add_parser("agent", help="opt-in bounded source proposals; offline preview by default"))
+    games.add_parsers(sub.add_parser("game", help="Godot/Unity build plans without license activation"))
     return p
 
 

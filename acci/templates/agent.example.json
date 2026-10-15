@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "enabled": false,
+  "provider": "",
+  "model": "",
+  "context_paths": ["src/", "tests/"],
+  "write_paths": ["src/"],
+  "max_context_bytes": 90000,
+  "max_file_bytes": 24000,
+  "max_changed_files": 4,
+  "max_output_tokens": 4096
+}

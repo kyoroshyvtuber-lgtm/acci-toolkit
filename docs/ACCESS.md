@@ -62,8 +62,12 @@ Unsigned simulator builds need no Apple signing credentials. Device builds
 need valid signing material and project-specific export settings. TestFlight
 and App Store distribution require the owner's Apple Developer setup.
 Android debug builds differ from production signing and store release.
-Signing and publication were not validated by the demo.
+Real device signing and publication were not validated by the demo. Profile
+checking/cleanup tests are not a real signed-IPA run. See [IOS.md](IOS.md).
 
 Check the owner's current GitHub Actions plan, runner availability, limits,
 and organization policy. Do not assume any runner or build is free.
 No workflow in this repository publishes to a store or registry automatically.
+The optional model executor is disabled; provider/model/key and spending
+approval are separate. It is not required for an external coding agent.
+See [AUTONOMY.md](AUTONOMY.md).

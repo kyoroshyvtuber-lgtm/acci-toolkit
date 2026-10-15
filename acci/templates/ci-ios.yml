@@ -1,94 +1,53 @@
-# ACCI template: iOS on a GitHub-hosted macOS runner (no Mac needed).
-# Default target: an unsigned simulator build of a valid, compatible project.
-# Signed device build (.ipa) runs only when the owner has
-# added these encrypted Actions secrets in repo Settings -> Secrets (never committed, never logged):
-#   IOS_P12_BASE64, IOS_P12_PASSWORD, IOS_PROFILE_BASE64, IOS_TEAM_ID, KEYCHAIN_PASSWORD
+# Export BOTH: ci-ios.yml -> .github/workflows/ios.yml; ios.py -> .acci/ios.py.
+# Adapt IOS_DIR/SCHEME and provide an actual scheme containing tests.
+# Unsigned only. Device signing is a SEPARATE manual, owner-gated workflow.
 name: ACCI iOS
 on:
   push:
+  pull_request:
   workflow_dispatch:
 permissions:
   contents: read
-  pull-requests: write
 concurrency:
-  group: acci-${{ github.workflow }}-${{ github.ref }}
+  group: acci-ios-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
-defaults:
-  run:
-    shell: bash
 env:
-  ACCI_LOG_DIR: ${{ github.workspace }}/acci-logs
-  IOS_DIR: ios                # contains project.yml (XcodeGen) or *.xcodeproj
+  IOS_DIR: ios
   SCHEME: App
-  HAS_SIGNING: ${{ secrets.IOS_P12_BASE64 != '' }}
 jobs:
   ios:
-    runs-on: macos-latest
+    runs-on: macos-15-intel
     timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
-      - id: versions
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install XcodeGen if your project uses project.yml
+        shell: bash
         run: |
-          mkdir -p "$ACCI_LOG_DIR"
-          { sw_vers; xcodebuild -version; xcrun simctl list runtimes | grep -i ios | tail -3; } 2>&1 | tee "$ACCI_LOG_DIR/versions.txt"
-      - id: generate
-        working-directory: ${{ env.IOS_DIR }}
+          if [ -f "$IOS_DIR/project.yml" ]; then
+            command -v xcodegen || brew install xcodegen
+          fi
+      - name: XCTest, UI tests, simulator install/launch and package
+        shell: bash
         run: |
-          if [ -f project.yml ]; then brew install xcodegen >/dev/null && xcodegen generate; fi 2>&1 | tee "$ACCI_LOG_DIR/generate.log"
-      - id: build
-        working-directory: ${{ env.IOS_DIR }}
-        run: |
-          xcodebuild -scheme "$SCHEME" -sdk iphonesimulator -configuration Debug -derivedDataPath build \
-            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee "$ACCI_LOG_DIR/build.log"
-      - id: package
-        working-directory: ${{ env.IOS_DIR }}/build/Build/Products/Debug-iphonesimulator
-        run: |
-          ditto -c -k --keepParent *.app "$GITHUB_WORKSPACE/ios-simulator-app.zip"
-          shasum -a 256 "$GITHUB_WORKSPACE/ios-simulator-app.zip" 2>&1 | tee "$ACCI_LOG_DIR/package.log"
-      - id: signing
-        name: Signed .ipa (only with owner-provided secrets)
-        if: env.HAS_SIGNING == 'true'
-        env:
-          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
-          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
-          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
-          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
-          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
-        working-directory: ${{ env.IOS_DIR }}
-        run: |
-          KC="$RUNNER_TEMP/acci.keychain-db"
-          echo "$IOS_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
-          echo "$IOS_PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/app.mobileprovision"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
-          security set-keychain-settings -lut 21600 "$KC" && security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KC"
-          security import "$RUNNER_TEMP/cert.p12" -P "$IOS_P12_PASSWORD" -A -t cert -f pkcs12 -k "$KC"
-          security list-keychain -d user -s "$KC"
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp "$RUNNER_TEMP/app.mobileprovision" ~/Library/MobileDevice/Provisioning\ Profiles/
-          xcodebuild -scheme "$SCHEME" -configuration Release -archivePath "$RUNNER_TEMP/App.xcarchive" \
-            DEVELOPMENT_TEAM="$IOS_TEAM_ID" archive 2>&1 | tee "$ACCI_LOG_DIR/signing.log"
-          xcodebuild -exportArchive -archivePath "$RUNNER_TEMP/App.xcarchive" -exportPath "$GITHUB_WORKSPACE/ipa" \
-            -exportOptionsPlist ExportOptions.plist 2>&1 | tee -a "$ACCI_LOG_DIR/signing.log"
-      - name: Remove signing material
+          GENERATE=()
+          if [ -f "$IOS_DIR/project.yml" ]; then GENERATE=(--generate); fi
+          python3 .acci/ios.py simulator "$IOS_DIR" --scheme "$SCHEME" \
+            --out "$RUNNER_TEMP/ios-evidence" "${GENERATE[@]}"
+      - name: Evidence (also on failure)
         if: always()
-        run: security delete-keychain "$RUNNER_TEMP/acci.keychain-db" 2>/dev/null || true; rm -f "$RUNNER_TEMP"/cert.p12 "$RUNNER_TEMP"/app.mobileprovision
-      - id: upload
         uses: actions/upload-artifact@v4
         with:
-          name: ios-${{ github.sha }}
+          name: ios-simulator-${{ github.sha }}
           path: |
-            ios-simulator-app.zip
-            ipa/*.ipa
-          if-no-files-found: error
+            ${{ runner.temp }}/ios-evidence/*.log
+            ${{ runner.temp }}/ios-evidence/*.json
+            ${{ runner.temp }}/ios-evidence/*.png
+            ${{ runner.temp }}/ios-evidence/*.zip
+            ${{ runner.temp }}/ios-evidence/SHA256SUMS
+          if-no-files-found: warn
           retention-days: 14
-      - name: ACCI report
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          ACCI_JOB_STATUS: ${{ job.status }}
-          ACCI_STEPS: ${{ toJSON(steps) }}
-          ACCI_TITLE: ios
-          ACCI_ARTIFACT_PATHS: ios-simulator-app.zip ipa/*.ipa
-          ACCI_ARTIFACT_URL: ${{ steps.upload.outputs.artifact-url }}
-          ACCI_ARTIFACT_ID: ${{ steps.upload.outputs.artifact-id }}
-        run: python3 .acci/report.py

@@ -1,0 +1,76 @@
+# Separate, opt-in signing. Export ios.py -> .acci/ios.py as well.
+# Owner must configure the apple-signing environment and review artifact visibility.
+name: ACCI signed iOS export
+on:
+  workflow_dispatch:
+    inputs:
+      method:
+        description: Export only; never upload to Apple
+        required: true
+        type: choice
+        default: debugging
+        options: [debugging, release-testing, app-store-connect]
+      acknowledge_artifact_visibility:
+        description: I approve storing this signed IPA as a repository Actions artifact
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: acci-ios-sign
+  cancel-in-progress: false
+env:
+  IOS_DIR: ios
+  SCHEME: App
+jobs:
+  export:
+    if: >-
+      vars.ACCI_IOS_SIGNING_ENABLED == 'true' &&
+      github.actor == github.repository_owner &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch) &&
+      inputs.acknowledge_artifact_visibility
+    environment: apple-signing
+    runs-on: macos-15-intel
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install XcodeGen if needed
+        shell: bash
+        run: |
+          if [ -f "$IOS_DIR/project.yml" ]; then
+            command -v xcodegen || brew install xcodegen
+          fi
+      - name: Validate profile/certificate, archive, export and verify IPA
+        env:
+          IOS_P12_BASE64: ${{ secrets.IOS_P12_BASE64 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROFILE_BASE64: ${{ secrets.IOS_PROFILE_BASE64 }}
+          IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          BUNDLE_ID: ${{ vars.ACCI_IOS_BUNDLE_ID }}
+          EXPORT_METHOD: ${{ inputs.method }}
+        shell: bash
+        run: |
+          GENERATE=()
+          if [ -f "$IOS_DIR/project.yml" ]; then GENERATE=(--generate); fi
+          python3 .acci/ios.py sign "$IOS_DIR" --scheme "$SCHEME" \
+            --bundle-id "$BUNDLE_ID" --method "$EXPORT_METHOD" \
+            --out "$RUNNER_TEMP/signed-evidence" "${GENERATE[@]}"
+      - name: Explicitly approved short-lived signed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed-ios-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/signed-evidence/*.ipa
+            ${{ runner.temp }}/signed-evidence/*.json
+            ${{ runner.temp }}/signed-evidence/*.log
+            ${{ runner.temp }}/signed-evidence/SHA256SUMS
+          retention-days: 1
+          if-no-files-found: error

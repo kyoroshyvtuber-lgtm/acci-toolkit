@@ -21,3 +21,8 @@ audit.jsonl
 *.mobileprovision
 *.keystore
 *.jks
+.godot/
+Library/
+DerivedData/
+acci-artifacts/
+*.xcresult/

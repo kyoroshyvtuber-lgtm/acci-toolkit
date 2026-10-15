@@ -1,10 +1,11 @@
 include README.md AGENTS.md CONTRIBUTING.md LICENSE
 include .acci/handoff.json .acci/HANDOFF.md
+include .acci/agent.json
 recursive-include docs *.md
 recursive-include bin *
 recursive-include scripts *.py
-recursive-include acci/templates *.yml *.py
-recursive-include examples *.py *.toml *.md *.yml *.kts *.properties *.xml *.java *.swift
+recursive-include acci/templates *.yml *.py *.sh *.cs *.json
+recursive-include examples *.py *.toml *.md *.yml *.kts *.properties *.xml *.java *.swift *.gd *.godot *.tscn *.cfg *.uid
 include examples/ci-demo/.gitignore
 recursive-include examples/ci-demo/.github *.yml
 recursive-include examples/ci-demo/.acci *.py

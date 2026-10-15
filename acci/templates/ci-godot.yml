@@ -1,0 +1,39 @@
+# Copy install-godot.sh to .acci/install-godot.sh. Adapt version/preset/tests.
+# This is an iOS Xcode export, NOT a signed IPA or verified simulator launch.
+name: ACCI Godot iOS export
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+env:
+  GAME_DIR: game
+  PRESET: iOS
+  ACCI_HOME: ${{ runner.temp }}/acci
+jobs:
+  export:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install matching editor and export templates (large download)
+        run: bash .acci/install-godot.sh --templates
+      - name: Gameplay tests and unsigned Xcode export
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="$ACCI_HOME/opt/godot-4.7.2/godot"
+          mkdir -p "$RUNNER_TEMP/godot-export"
+          "$GODOT" --headless --path "$GAME_DIR" --import
+          # Replace with this project's real test entry point.
+          test -f "$GAME_DIR/tests/score_test.gd"
+          "$GODOT" --headless --path "$GAME_DIR" --script tests/score_test.gd
+          # export_presets.cfg must contain owner-configured bundle ID/team ID.
+          "$GODOT" --headless --path "$GAME_DIR" --export-debug "$PRESET" "$RUNNER_TEMP/godot-export/Game.zip"
+          shasum -a 256 "$RUNNER_TEMP/godot-export/Game.zip" > "$RUNNER_TEMP/godot-export/SHA256SUMS"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: godot-xcode-${{ github.sha }}
+          path: ${{ runner.temp }}/godot-export/
+          retention-days: 14

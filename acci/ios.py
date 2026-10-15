@@ -7,7 +7,6 @@ from __future__ import annotations
 import argparse
 import base64
 import datetime as dt
-import fnmatch
 import hashlib
 import json
 import os
@@ -57,7 +56,9 @@ def validate_profile(profile: dict, team: str, bundle: str, method: str,
     expires = profile.get("ExpirationDate")
     if not isinstance(expires, dt.datetime):
         raise ValueError("Profile has no expiration date")
-    if expires.replace(tzinfo=dt.timezone.utc) <= now.astimezone(dt.timezone.utc):
+    expires = (expires.replace(tzinfo=dt.timezone.utc) if expires.tzinfo is None
+               else expires.astimezone(dt.timezone.utc))
+    if expires <= now.astimezone(dt.timezone.utc):
         raise ValueError("Provisioning profile has expired")
     if team not in profile.get("TeamIdentifier", []):
         raise ValueError("Provisioning profile belongs to another team")
@@ -65,11 +66,13 @@ def validate_profile(profile: dict, team: str, bundle: str, method: str,
     if ent.get("com.apple.developer.team-identifier", team) != team:
         raise ValueError("Profile entitlement team does not match")
     prefix, sep, pattern = ent.get("application-identifier", "").partition(".")
-    if (not sep or prefix not in profile.get("ApplicationIdentifierPrefix", [team])
-            or not fnmatch.fnmatchcase(bundle, pattern)):
+    permits_bundle = (pattern == bundle or
+                      (pattern.endswith("*") and pattern.count("*") == 1
+                       and not any(c in pattern for c in "?[]") and bundle.startswith(pattern[:-1])))
+    if not sep or prefix not in profile.get("ApplicationIdentifierPrefix", [team]) or not permits_bundle:
         raise ValueError("Bundle identifier is not permitted by the provisioning profile")
     identifier = profile.get("UUID", "")
-    if not re.fullmatch(r"[A-Fa-f0-9-]{36}", identifier):
+    if not re.fullmatch(r"[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{4}){3}-[A-Fa-f0-9]{12}", identifier):
         raise ValueError("Invalid provisioning profile UUID")
     development = ent.get("get-task-allow", False)
     devices = bool(profile.get("ProvisionedDevices"))
@@ -124,6 +127,19 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def test_counts(summary: dict) -> dict:
+    """Modern xcresulttool summary. Zero tests is not a successful test run."""
+    if not isinstance(summary, dict):
+        raise ValueError("Invalid xcresult test summary")
+    counts = {key: summary.get(key, 0) for key in
+              ("passedTests", "failedTests", "skippedTests", "expectedFailures")}
+    if any(type(n) is not int or n < 0 for n in counts.values()):
+        raise ValueError("Invalid xcresult test counts")
+    if counts["passedTests"] <= 0 or counts["failedTests"] != 0:
+        raise ValueError("No passing tests or failed tests in xcresult")
+    return counts
+
+
 def preflight(signing: bool = False) -> dict:
     tools = {name: shutil.which(name) is not None
              for name in ("xcodebuild", "xcrun", "ditto", "xcodegen", "security")}
@@ -147,7 +163,7 @@ class Commands:
         self.out, self.cwd = out, cwd
         self.env = {k: v for k, v in os.environ.items()
                     if k not in SIGNING_ENV and not any(
-                        x in k.upper() for x in ("TOKEN", "API_KEY", "PASSWORD"))}
+                        x in k.upper() for x in ("TOKEN", "KEY", "SECRET", "PASSWORD"))}
 
     def capture(self, args: list[str], *, private: bool = False, timeout: int = 120) -> str:
         try:
@@ -227,12 +243,18 @@ def simulator(project: str, out: str, scheme: str, generate: bool = False) -> di
         result.update(device_type=device_type, runtime=runtime)
         commands.run(["xcrun", "simctl", "boot", device], "boot", 120)
         commands.run(["xcrun", "simctl", "bootstatus", device, "-b"], "boot-wait", 300)
+        result["tests"] = "not-passed"
         commands.run(args + ["-sdk", "iphonesimulator", "-configuration", "Debug",
                             "-derivedDataPath", str(output / "DerivedData"),
                             "-destination", f"platform=iOS Simulator,id={device}",
                             "-resultBundlePath", str(output / "Tests.xcresult"),
                             "-parallel-testing-enabled", "NO", "CODE_SIGNING_ALLOWED=NO", "test"],
                      "tests", 1800)
+        summary = json.loads(commands.capture(
+            ["xcrun", "xcresulttool", "get", "test-results", "summary",
+             "--path", str(output / "Tests.xcresult")]))
+        (output / "test-summary.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+        result["test_counts"] = test_counts(summary)
         result["tests"] = "passed"
         apps = list((output / "DerivedData/Build/Products/Debug-iphonesimulator").glob("*.app"))
         apps = [p for p in apps if not p.name.endswith("-Runner.app")]
@@ -245,6 +267,7 @@ def simulator(project: str, out: str, scheme: str, generate: bool = False) -> di
             raise ValueError("Built product is not a simulator application")
         result["bundle_id"] = bundle
         commands.run(["xcrun", "simctl", "install", device, str(app)], "install", 120)
+        result["launch"] = "not-passed"
         commands.run(["xcrun", "simctl", "launch", "--terminate-running-process", device, bundle],
                      "launch", 120)
         time.sleep(3)
@@ -314,6 +337,9 @@ def signed_export(project: str, out: str, scheme: str, bundle: str, method: str,
                               *old_keychains], private=True)
             profile_path = Path.home() / "Library/MobileDevice/Provisioning Profiles" / (checked["uuid"] + ".mobileprovision")
             profile_path.parent.mkdir(parents=True, exist_ok=True)
+            if profile_path.is_symlink():
+                profile_path = None
+                raise ValueError("Refusing to overwrite a symlinked provisioning profile")
             previous_profile = profile_path.read_bytes() if profile_path.exists() else None
             shutil.copyfile(mobile, profile_path)
             options = tmpdir / "ExportOptions.plist"
@@ -357,11 +383,18 @@ def signed_export(project: str, out: str, scheme: str, bundle: str, method: str,
                 except RuntimeError:
                     result.setdefault("cleanup_warnings", []).append("temporary keychain deletion failed")
             if profile_path is not None:
-                if previous_profile is None:
-                    profile_path.unlink(missing_ok=True)
-                else:
-                    profile_path.write_bytes(previous_profile)
+                try:
+                    if previous_profile is None:
+                        profile_path.unlink(missing_ok=True)
+                    else:
+                        profile_path.write_bytes(previous_profile)
+                except OSError:
+                    result.setdefault("cleanup_warnings", []).append("provisioning profile restore/removal failed")
+            if result.get("cleanup_warnings"):
+                result["status"] = "failed-cleanup"
             finish(output, result)
+            if result.get("cleanup_warnings"):
+                raise RuntimeError("Signing cleanup was incomplete; see result.json; do not reuse this host")
 
 
 def _ready(args):
