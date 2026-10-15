@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Orchestrator-only git with GitHub HTTPS auth via the gh credential helper (no token in URLs/config).
-ACCI_HOME="${ACCI_HOME:-/data/acci}"
-export GH_CONFIG_DIR="$ACCI_HOME/secrets/gh" GIT_TERMINAL_PROMPT=0
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+acci_find_gh || exit $?
+export GIT_TERMINAL_PROMPT=0
 set -o pipefail
-git -c credential.helper= -c "credential.https://github.com.helper=!$ACCI_HOME/opt/gh auth git-credential" "$@" 2>&1 \
+printf -v GH_HELPER '%q' "$ACCI_GH_BIN"
+git -c credential.helper= -c "credential.https://github.com.helper=!$GH_HELPER auth git-credential" "$@" 2>&1 \
   | sed -E 's/(gh[pousr]_|github_pat_)[A-Za-z0-9_]+/[REDACTED]/g'

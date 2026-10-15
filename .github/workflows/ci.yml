@@ -1,0 +1,45 @@
+name: ACCI toolkit tests
+on:
+  push:
+    branches: [main, "acci/**"]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: toolkit-${{ github.workflow }}-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -e ".[dev]"
+      - run: python -m pytest -q --junitxml=test-results.xml
+      - name: Test the bundled Python demonstration
+        run: PYTHONPATH=examples/ci-demo/src python -m pytest -q examples/ci-demo/tests
+      - run: python -m build
+      - name: Verify a fresh wheel install
+        shell: bash
+        run: |
+          python -m venv "$RUNNER_TEMP/acci-wheel"
+          "$RUNNER_TEMP/acci-wheel/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/acci-wheel/bin/python" "$GITHUB_WORKSPACE/scripts/smoke_installed.py"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: toolkit-python-${{ matrix.python }}
+          path: |
+            dist/
+            test-results.xml
+          if-no-files-found: warn
+          retention-days: 14

@@ -1,2 +1,2 @@
-"""ACCI: Autonomous Cloud Coding Infrastructure, sandbox-side toolkit."""
-__version__ = "0.1.0"
+"""ACCI: provider-independent tools for agent-assisted cloud development."""
+__version__ = "0.2.0"

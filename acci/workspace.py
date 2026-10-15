@@ -1,6 +1,6 @@
 """Isolated per-project workspaces, resumable state, journals and an audit log.
 
-ACCI_HOME (default /data/acci):
+ACCI_HOME (configurable; /data/acci or a user-writable data directory by default):
   projects/<name>/src        working copy (git)
   projects/<name>/inbox      uploaded archives / extracted copies awaiting merge
   projects/<name>/artifacts  verified build outputs
@@ -19,7 +19,16 @@ import shutil
 import time
 from pathlib import Path
 
-HOME = Path(os.environ.get("ACCI_HOME", "/data/acci"))
+def default_home() -> Path:
+    """Keep existing /data installations working; otherwise use a user-writable location."""
+    if os.environ.get("ACCI_HOME"):
+        return Path(os.environ["ACCI_HOME"]).expanduser().resolve()
+    if Path("/data").is_dir() and os.access("/data", os.W_OK):
+        return Path("/data/acci")
+    return Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local/share"))) / "acci"
+
+
+HOME = default_home()
 NAME_RE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 SUBDIRS = ("src", "inbox", "artifacts", "logs", "tmp")
 
