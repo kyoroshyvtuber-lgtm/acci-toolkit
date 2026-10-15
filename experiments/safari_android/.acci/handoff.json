@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "toolkit_version": "0.2.0",
-  "exported_at": "2026-10-15T17:53:31Z",
+  "exported_at": "2026-10-15T18:10:18Z",
   "state": {
     "task": "Investigate original iOS Safari on Android; a separate WPE WebKit port must never be called Safari IPA execution",
     "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
@@ -80,6 +80,24 @@
         "step": "runtime-implementation",
         "status": "blocked",
         "note": "No Android-compatible iOS runtime, Darwin system-service layer or Apple framework implementation exists in this experiment. Direct main-executable imports include Foundation, MobileSafariUI, libSystem.B and libobjc.A; their recursive dependency closure is unresolved. Matching ARM64 alone is insufficient. Do not substitute a reskinned browser or call WPE original Safari execution."
+      },
+      {
+        "ts": "2026-10-15T17:56:43Z",
+        "step": "report",
+        "status": "done",
+        "note": "Published research source/docs/separate nested handoff at 9dc045f976636d7d541e0c9e06a2213b7a956a37; opened draft PR 3, no merge or release. Final Safari CI 38781195030 succeeded with 22 tests; logs read and metadata artifact hashes verified. Final base CI 38781195142 succeeded: 53 passed/2 skipped plus 14 demo tests on Python 3.10 and 3.13. Main remains faf77202f607780d664afb88e139b9b1b146177b. No Android/Safari execution or working APK."
+      },
+      {
+        "ts": "2026-10-15T17:57:13Z",
+        "step": "pr-checks",
+        "status": "done",
+        "note": "Draft PR 3 CI 38781437353 completed successfully at 9dc045f976636d7d541e0c9e06a2213b7a956a37; logs inspected. Python 3.10/3.13 each report 53 toolkit tests passed, 2 skipped, plus 14 demo tests passed. These do not verify Safari runtime compatibility."
+      },
+      {
+        "ts": "2026-10-15T18:10:18Z",
+        "step": "device-target",
+        "status": "done",
+        "note": "Owner now reports Android 16 installed on realme GT Neo 5 SE. This supersedes the earlier unknown Android version as an owner report only, not an ADB or physical-device verification. Actual ABI remains specification-based, and tested_on_owner_device remains false. No Safari APK, Android execution or compatible iOS runtime has been produced."
       }
     ],
     "attempts": {},
@@ -92,7 +110,13 @@
       "metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015419/artifacts/11995256286",
       "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015120",
       "phone_specification": "https://www.realme.com/cn/realme-gt-neo-5-se",
-      "official_safari_listing": "https://apps.apple.com/sc/app/safari/id1146562112"
+      "official_safari_listing": "https://apps.apple.com/sc/app/safari/id1146562112",
+      "research_pr": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/3",
+      "final_safari_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030",
+      "final_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195142",
+      "final_metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030/artifacts/11994949688",
+      "published_checkpoint": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/9dc045f976636d7d541e0c9e06a2213b7a956a37/experiments/safari_android",
+      "pr_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781437353"
     }
   }
 }

@@ -11,6 +11,11 @@ Branch: acci/safari-investigation
 
 Last recorded stage: runtime-implementation:blocked
 
+## Owner-reported target
+
+realme GT Neo 5 SE, Android 16. No ADB readback or phone test has been
+performed; runtime compatibility is unverified.
+
 ## Remaining stages
 
 - runtime-implementation
@@ -27,6 +32,12 @@ Last recorded stage: runtime-implementation:blocked
 - toolkit_ci: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015120
 - phone_specification: https://www.realme.com/cn/realme-gt-neo-5-se
 - official_safari_listing: https://apps.apple.com/sc/app/safari/id1146562112
+- research_pr: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/3
+- final_safari_ci: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030
+- final_toolkit_ci: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195142
+- final_metadata_artifact: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030/artifacts/11994949688
+- published_checkpoint: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/9dc045f976636d7d541e0c9e06a2213b7a956a37/experiments/safari_android
+- pr_toolkit_ci: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781437353
 
 ## Restore
 

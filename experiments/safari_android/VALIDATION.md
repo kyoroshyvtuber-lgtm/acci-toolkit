@@ -55,7 +55,8 @@ those dependencies on Android.
 
 The phone model is owner-reported **realme GT Neo 5 SE**. Its chipset is recorded
 from the manufacturer's page; the expected `arm64-v8a` target is not an ADB
-readback. The owner's currently installed Android version remains unknown.
+readback. The owner reports **Android 16** as currently installed; this has not
+been verified with ADB or a test on the phone.
 
 The earlier missing reference has therefore been reduced to a concrete,
 inspectable simulator build. **It has not established the requested iOS-on-Android

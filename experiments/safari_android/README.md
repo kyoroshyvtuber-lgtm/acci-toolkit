@@ -20,8 +20,8 @@ verified evidence and remaining execution blockers.
   already present there. It does **not** download an unlicensed IPA from a mirror,
   bypass encryption/signing, request an Apple password, or redistribute Apple code.
 - [Target phone](https://www.realme.com/cn/realme-gt-neo-5-se).
-  The manufacturer lists Snapdragon 7+ Gen 2. `target-device.json` keeps the actual
-  installed Android version unknown; the shipping OS is not a device readback.
+  The manufacturer lists Snapdragon 7+ Gen 2. `target-device.json` records
+  **Android 16 as reported by the owner**, not as an ADB-verified device readback.
 
 The workflow's `xcode-27` label is a standard ARM preview image, not `-xlarge`.
 Preview availability and software can change. Inspect actual run evidence.
