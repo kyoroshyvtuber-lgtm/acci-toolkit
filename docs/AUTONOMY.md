@@ -43,7 +43,10 @@ Opening an issue or pushing this PR does not activate paid provider calls.
 | `publish` | Contents/PR write; fresh trusted VM | Revalidates original bundle; unique `acci/agent-<run>-<attempt>` branch and PR |
 
 Publish depends on **both** validations and does not execute generated source.
-All jobs use the same immutable event commit. Validation machines do not supply
+All jobs use the same immutable event commit. Downloads are pinned to the
+proposal job's immutable artifact ID, not its name; every apply/publish also
+checks the exact bundle SHA-256 emitted by that trusted job. A missing/deleted
+original artifact fails closed. Validation machines do not supply
 replacement source bundles to the publisher. This reduces credential exposure,
 not a proof of source safety: review the PR. Hosted runners still have
 artifact/runtime infrastructure tokens.

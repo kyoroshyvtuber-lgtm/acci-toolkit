@@ -39,6 +39,15 @@ def test_validation_has_no_provider_or_signing_secrets_or_write_permission():
     assert "secrets." not in str(publish)
     assert "agent publish" in str(publish)
     assert "pytest" not in str(publish) and "xcodebuild" not in str(publish)
+    assert workflow["jobs"]["propose"]["outputs"]["artifact_id"] == "${{ steps.upload.outputs.artifact-id }}"
+    for name in ("validate", "validate-ios", "publish"):
+        job = workflow["jobs"][name]
+        downloads = [step for step in job["steps"] if step.get("uses", "").startswith("actions/download-artifact")]
+        assert len(downloads) == 1
+        assert downloads[0]["with"]["artifact-ids"] == "${{ needs.propose.outputs.artifact_id }}"
+        assert "name" not in downloads[0]["with"]
+        assert "--expected-sha256" in str(job)
+        assert "${{ needs.propose.outputs.bundle_sha256 }}" in str(job)
 
 
 def test_signing_is_manual_default_branch_owner_and_visibility_gated():

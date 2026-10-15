@@ -163,6 +163,19 @@ def test_all_changes_validated_before_any_write(repo):
         agent.apply_bundle(root, {**policy, "max_changed_files": 1}, value)
 
 
+def test_bundle_bytes_are_bound_to_trusted_job_digest(repo, tmp_path):
+    root, policy = repo
+    path = tmp_path / "bundle.json"
+    path.write_text(json.dumps(bundle(root, policy)))
+    expected = agent.digest(path.read_bytes())
+    assert agent.read_bundle(str(path), expected)["base_sha"] == agent.clean_base(root)
+    with pytest.raises(ValueError, match="SHA-256"):
+        agent.read_bundle(str(path), "0" * 64)
+    path.write_text(path.read_text() + "\n")
+    with pytest.raises(ValueError, match="SHA-256"):
+        agent.read_bundle(str(path), expected)
+
+
 class FakeHTTP:
     def __init__(self, data):
         self.data, self.requests = data, []

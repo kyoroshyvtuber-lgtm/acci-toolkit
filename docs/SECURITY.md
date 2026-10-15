@@ -40,7 +40,9 @@ commands. Tests, policy, CI, dependencies and signing are not writable.
 See [the complete boundaries](AUTONOMY.md). Secret scanning and passing tests do
 not prove generated code is harmless; humans must review the diff.
 
-The publisher rechecks the original proposal/base/policy, not an artifact
+The publisher downloads the immutable proposal artifact ID and checks the exact
+bundle SHA-256 from the trusted proposal job, then rechecks base/policy/file hashes.
+It does not accept a replacement selected by artifact name or an artifact
 produced by a machine that executed generated source. Checkout authentication
 is not persisted. Validation still runs on hosted infrastructure with runtime/
 artifact tokens; it is not a claim of perfect hostile-code isolation.

@@ -28,20 +28,32 @@ SIGNING_ENV = ("IOS_P12_BASE64", "IOS_P12_PASSWORD", "IOS_PROFILE_BASE64",
 METHODS = ("debugging", "release-testing", "app-store-connect")
 
 
-def choose_simulator(types: dict, runtimes: dict) -> tuple[str, str]:
+def version_tuple(value: str) -> tuple[int, int, int]:
+    if not re.fullmatch(r"\d+(?:\.\d+){0,2}", value):
+        raise ValueError("Unrecognized simulator/SDK version")
+    return (tuple(int(x) for x in value.split(".")) + (0, 0))[:3]
+
+
+def choose_simulator(types: dict, runtimes: dict, sdk_version: str | None = None) -> tuple[str, str]:
+    sdk = version_tuple(sdk_version) if sdk_version else None
     available = [r for r in runtimes.get("runtimes", [])
-                 if r.get("isAvailable") and ".iOS-" in r.get("identifier", "")]
-    available.sort(key=lambda r: tuple(int(x) for x in r["version"].split(".")), reverse=True)
+                 if r.get("isAvailable") and ".iOS-" in r.get("identifier", "")
+                 and (sdk is None or version_tuple(r["version"]) <= sdk)]
+    available.sort(key=lambda r: version_tuple(r["version"]), reverse=True)
     for runtime in available:
-        version = tuple(int(x) for x in runtime["version"].split("."))
-        version = (version + (0, 0))[:3]
+        version = version_tuple(runtime["version"])
         numeric = (version[0] << 16) | (version[1] << 8) | version[2]
         phones = [d for d in types.get("devicetypes", [])
                   if d.get("productFamily") == "iPhone"
                   and d.get("minRuntimeVersion", 0) <= numeric <= d.get("maxRuntimeVersion", 0xFFFFFFFF)]
         if phones:
+            # Prefer the newest standard-size iPhone supported by this runtime.
+            # The list order is not a reliable indicator of model age.
+            standard = [d for d in phones if re.fullmatch(r"iPhone \d+", d.get("name", ""))]
+            if standard:
+                phones = sorted(standard, key=lambda d: int(d["name"].split()[-1]))
             return phones[-1]["identifier"], runtime["identifier"]
-    raise ValueError("No compatible iPhone/iOS runtime; install an iOS simulator in Xcode")
+    raise ValueError("No compatible iPhone/iOS runtime for the active Xcode SDK; install a matching simulator")
 
 
 def validate_profile(profile: dict, team: str, bundle: str, method: str,
@@ -237,10 +249,11 @@ def simulator(project: str, out: str, scheme: str, generate: bool = False) -> di
         commands.run(["xcodebuild", "-version"], "xcode-version", 30)
         types = json.loads(commands.capture(["xcrun", "simctl", "list", "devicetypes", "--json"]))
         runtimes = json.loads(commands.capture(["xcrun", "simctl", "list", "runtimes", "--json"]))
-        device_type, runtime = choose_simulator(types, runtimes)
+        sdk_version = commands.capture(["xcrun", "--sdk", "iphonesimulator", "--show-sdk-version"])
+        device_type, runtime = choose_simulator(types, runtimes, sdk_version)
         device = commands.capture(["xcrun", "simctl", "create", f"ACCI-{uuid.uuid4().hex[:8]}",
                                    device_type, runtime])
-        result.update(device_type=device_type, runtime=runtime)
+        result.update(device_type=device_type, runtime=runtime, sdk_version=sdk_version)
         commands.run(["xcrun", "simctl", "boot", device], "boot", 120)
         commands.run(["xcrun", "simctl", "bootstatus", device, "-b"], "boot-wait", 300)
         result["tests"] = "not-passed"

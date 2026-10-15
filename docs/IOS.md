@@ -16,7 +16,8 @@ acci ios simulator examples/ci-demo/ios --scheme App --generate \
 ```
 
 Use an empty output directory. The helper explicitly generates the project,
-selects an available compatible iPhone/runtime, creates its **own disposable
+selects an available compatible iPhone/runtime **not newer than the active Xcode
+simulator SDK** (installed runtimes can belong to a different Xcode), creates its **own disposable
 simulator**, boots/waits, runs the scheme's XCTest/UI tests, installs/launches
 the single application, captures a screenshot, and packages the simulator app.
 It records platform/bundle ID, logs and SHA-256 and shuts down/deletes only its

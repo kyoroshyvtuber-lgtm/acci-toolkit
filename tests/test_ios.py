@@ -34,6 +34,21 @@ def test_simulator_chooses_newest_available_compatible_iphone():
         ios.choose_simulator(types, {"runtimes": []})
 
 
+def test_simulator_must_not_use_runtime_newer_than_selected_xcode_sdk():
+    types = {"devicetypes": [
+        {"identifier": "iphone11", "name": "iPhone 11", "productFamily": "iPhone"},
+        {"identifier": "iphone16", "name": "iPhone 16", "productFamily": "iPhone",
+         "minRuntimeVersion": 18 << 16},
+        {"identifier": "iphone17", "name": "iPhone 17", "productFamily": "iPhone",
+         "minRuntimeVersion": 26 << 16}]}
+    runtimes = {"runtimes": [
+        {"identifier": "com.apple.iOS-26-2", "version": "26.2", "isAvailable": True},
+        {"identifier": "com.apple.iOS-18-5", "version": "18.5", "isAvailable": True}]}
+    assert ios.choose_simulator(types, runtimes, "18.5") == ("iphone16", "com.apple.iOS-18-5")
+    with pytest.raises(ValueError, match="active Xcode SDK"):
+        ios.choose_simulator(types, runtimes, "17.0")
+
+
 def test_development_profile_and_export_options_do_not_upload():
     checked = ios.validate_profile(profile(), "ABCDEFGHIJ", "dev.acci.demo", "debugging")
     assert checked["certificate_sha1"] == [hashlib.sha1(b"synthetic-certificate").hexdigest().upper()]
@@ -164,6 +179,8 @@ def test_simulator_failure_still_deletes_its_own_device_and_records_evidence(tmp
             if "runtimes" in args:
                 return json.dumps({"runtimes": [{"identifier": "com.apple.iOS-18", "version": "18",
                                                 "isAvailable": True}]})
+            if "--show-sdk-version" in args:
+                return "18.0"
             return "our-disposable-device"
         def run(self, args, label, timeout):
             if label == "tests":

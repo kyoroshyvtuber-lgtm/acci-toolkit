@@ -1,6 +1,59 @@
 # Validation record
 
-## Portable toolkit
+## v0.3: iOS, games and optional bounded executor
+
+Initial implementation checkpoint:
+`c8ee68ddc2a1930557a340a674608709f1e0c2a0` on `acci/ios-agent-readiness`.
+This is a task branch, not an approved merge or package/store release.
+
+- Local Linux/Python 3.13: **109 toolkit tests and 14 Python-demo tests passed**.
+  Bash syntax, Python compilation, source scan and reachable-history scan checked.
+  Only the existing deliberately synthetic `client_secret` fixture was found.
+- [Toolkit run 38758019821](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019821):
+  Python 3.10/3.13 each recorded **107 passed, 2 skipped**, plus 14 demo tests.
+  The skips are the existing user-namespace checks unavailable on hosted Linux;
+  they passed locally. Both jobs built wheel/sdist and passed clean-wheel smoke,
+  including helper/template extraction, engine plan and offline agent preview.
+- Both cloud package sets were downloaded; JUnit totals, ZIP integrity, required
+  source-distribution files and SHA-256 were checked. A separate anonymous clone
+  of this branch with empty HOME/no inherited GitHub/provider/Notion credentials
+  passed independent bootstrap and all 109 tests.
+- [Godot run 38758019951](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019951):
+  pinned, checksum-verified Godot 4.7.2 imported the fixture, passed four gameplay
+  checks, exported `.pck` and launched that package. The downloaded cloud package
+  passed its SHA-256 check and launched again locally without credentials.
+  This is a resource pack, **not an iOS/standalone game build**.
+- [iOS run 38758019836](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836):
+  application compilation and **three unit tests passed**, but the UI runner
+  timed out loading Accessibility. Evidence shows active Xcode 16.4 with selected
+  iOS 26.2. The follow-up caps runtime selection at the active Xcode SDK; UI tests
+  remain required. No completed UI/launch result is claimed yet. The earlier ARM
+  runner never acquired a machine due to GitHub capacity; no code step ran there.
+
+Follow-up local result: **111 toolkit tests and 14 demo tests passed**. Added
+regressions cover active-SDK runtime selection and exact proposal-bundle digest.
+The agent workflow now pins immutable artifact IDs and trusted proposal SHA-256,
+not artifact names. Cloud follow-up is pending at this checkpoint.
+
+The optional full Godot export-template installer was also run locally with
+release SHA-256 verification, followed by native Linux debug export (executable
+plus resource pack) and a successful headless launch. This is additional local
+engine/export validation, not an iOS, rendering or finished-game claim.
+
+The optional executor remains disabled in `.acci/agent.json`, with no provider
+or model chosen. Provider adapters, scope guards, exact-base apply, separate-job
+credential boundaries, unique-branch/PR logic and failure paths are covered by
+offline tests. **No live paid provider request or live automated agent PR was
+performed.** Neither repository activation variables nor signing secrets were
+configured by this change.
+
+Still not verified: real Apple certificate/profile export, physical iPhone
+installation, TestFlight/App Store, Godot→iOS export, Unity editor/license/build,
+or identical behavior from arbitrary models. Signing checks/cleanup are tested
+with fixtures, not a real signed IPA. See [iOS](IOS.md), [games](GAMES.md) and
+[autonomy](AUTONOMY.md) for exact owner activation requirements.
+
+## Portable toolkit (v0.2 historical record)
 
 The portable branch adds package installation, provider-neutral instructions,
 checked handoff export/import, configurable runtime locations, tests and CI.
@@ -53,7 +106,7 @@ may require the owner's access. Runner images and dependencies can change.
 | iOS | Xcode compile and simulator `.app` archive; platform metadata inspected | [38276420739](https://github.com/kyoroshyvtuber-lgtm/acci-test-lab/actions/runs/38276420739) |
 | Linux/Windows/macOS | Runner/toolchain availability probes, **not** complete builds on every stack | [38276418063](https://github.com/kyoroshyvtuber-lgtm/acci-test-lab/actions/runs/38276418063) |
 
-Not verified: iOS device signing or installation, running the iOS app in a
+Not verified in this historical v0.2 snapshot: iOS device signing or installation, running the iOS app in a
 simulator, TestFlight/App Store, Android production signing/store release,
 Node build template, Windows/.NET build template, every detected framework,
 or identical results from arbitrary models.
@@ -64,8 +117,8 @@ The owner explicitly approved the MIT license, merging PR #1, and making the
 repository public. `LICENSE` records the MIT terms; package metadata and the
 installed-wheel smoke check verify that the license is included.
 
-The release checkpoint in `.acci/` is a snapshot before those approved
-administrative operations. Check the live PR state, repository visibility,
+The earlier release checkpoint was a snapshot before those approved
+administrative operations; `.acci/` now tracks the current task. Check live PR state, repository visibility,
 default-branch `LICENSE`, and latest main-branch CI before reporting completion
 or repeating any mutation. A checkpoint is not a live status feed.
 

@@ -321,11 +321,15 @@ def apply_bundle(root: Path, policy: dict, bundle: dict) -> list[str]:
     return [change["path"] for change in checked]
 
 
-def read_bundle(path: str) -> dict:
+def read_bundle(path: str, expected_sha256: str | None = None) -> dict:
     p = Path(path)
     if p.stat().st_size > 750_000:
         raise ValueError("Proposal bundle exceeds hard byte ceiling")
-    return json.loads(p.read_text(encoding="utf-8"))
+    data = p.read_bytes()
+    if expected_sha256 is not None:
+        if not re.fullmatch(r"[a-f0-9]{64}", expected_sha256) or digest(data) != expected_sha256:
+            raise ValueError("Proposal SHA-256 does not match the trusted proposal job")
+    return json.loads(data.decode("utf-8"))
 
 
 def publish(root: Path, policy: dict, bundle: dict, repository: str,
@@ -381,6 +385,7 @@ def add_parsers(parser):
             cmd.add_argument("--out", required=True)
         else:
             cmd.add_argument("--bundle", required=True)
+            cmd.add_argument("--expected-sha256", required=name == "publish")
         if name == "publish":
             for arg in ("repository", "branch", "base", "verified-run"):
                 cmd.add_argument("--" + arg, required=True)
@@ -403,7 +408,7 @@ def _command(args):
         out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps({"written": str(out), "provider_called": args.agent_command == "propose"}))
     else:
-        bundle = read_bundle(args.bundle)
+        bundle = read_bundle(args.bundle, args.expected_sha256)
         report = (apply_bundle(root, policy, bundle) if args.agent_command == "apply" else
                   publish(root, policy, bundle, args.repository, args.branch, args.base, args.verified_run))
         print(json.dumps(report))
