@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "toolkit_version": "0.2.0",
-  "exported_at": "2026-10-15T18:10:18Z",
+  "exported_at": "2026-10-15T18:24:13Z",
   "state": {
     "task": "Investigate original iOS Safari on Android; a separate WPE WebKit port must never be called Safari IPA execution",
     "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
@@ -13,6 +13,7 @@
       "probe-tests",
       "safari-input",
       "report",
+      "route-research",
       "runtime-implementation",
       "device-test"
     ],
@@ -98,6 +99,18 @@
         "step": "device-target",
         "status": "done",
         "note": "Owner now reports Android 16 installed on realme GT Neo 5 SE. This supersedes the earlier unknown Android version as an owner report only, not an ADB or physical-device verification. Actual ABI remains specification-based, and tested_on_owner_device remains false. No Safari APK, Android execution or compatible iOS runtime has been produced."
+      },
+      {
+        "ts": "2026-10-15T18:12:19Z",
+        "step": "device-target-publication",
+        "status": "done",
+        "note": "Owner-reported Android 16 saved and remotely read back at commit 0911f510bb6a58bbb5d1871ba9705552c83e8d78 in existing draft PR 3. Local 22 tool tests passed; metadata CI 38783494737 succeeded; PR toolkit CI 38783502554 succeeded and logs reviewed. Push toolkit CI 38783494949 was cancelled as a duplicate by concurrency. No merge, Android device test or Safari launch."
+      },
+      {
+        "ts": "2026-10-15T18:24:13Z",
+        "step": "route-research",
+        "status": "done",
+        "note": "Read upstream technical sources. Relevant architectural alternative: full-system emulation of matching older iOS rather than rewriting MobileSafariUI. eShard describes iOS 14 GUI/touch/network/application research with substantial system modifications and hardware/Metal/version limitations; not reproduced here and no Android port established. QEMU-iOS provides legacy iPod Touch GUI precedent. darwin-vm explicitly lacks GUI. touchHLE excludes 64-bit iOS; unidbg is experimental execution support, not a proven browser GUI; Darling/iPasim are not drop-in Android solutions. Windows Safari 5.1.7 plus Winlator is an untested, outdated, different-platform candidate; old Apple installer URL returned 404, nothing downloaded/run. WPE and remote Apple-hosted execution remain distinct deliverables. No Apple images, protection-bypass patches, new services or APK were obtained, executed or published. Source-based findings and next validation gates recorded in experiment README."
       }
     ],
     "attempts": {},
@@ -116,7 +129,21 @@
       "final_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195142",
       "final_metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030/artifacts/11994949688",
       "published_checkpoint": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/9dc045f976636d7d541e0c9e06a2213b7a956a37/experiments/safari_android",
-      "pr_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781437353"
+      "pr_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781437353",
+      "android16_target_commit": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/commit/0911f510bb6a58bbb5d1871ba9705552c83e8d78",
+      "android16_pr_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38783502554",
+      "android16_metadata_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38783494737",
+      "qemu_ios14_research_part1": "https://www.eshard.com/blog/emulating-ios-14-with-qemu",
+      "qemu_ios14_research_part2": "https://www.eshard.com/blog/emulating-ios-14-with-qemu-part2",
+      "legacy_qemu_ios": "https://github.com/devos50/qemu-ios",
+      "legacy_gui_account": "https://devos50.github.io/blog/2022/ipod-touch-qemu",
+      "touchhle": "https://github.com/touchHLE/touchHLE/blob/trunk/README.md",
+      "darwin_vm_limits": "https://github.com/jprx/darwin-vm",
+      "unidbg": "https://github.com/zhkl0228/unidbg/blob/master/README.md",
+      "darling_ios_status": "https://www.darlinghq.org/",
+      "ipasim": "https://github.com/ipasimulator/ipasim",
+      "winlator": "https://github.com/brunodev85/winlator",
+      "apple_windows_safari_status": "https://support.apple.com/en-us/102665"
     }
   }
 }

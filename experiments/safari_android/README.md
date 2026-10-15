@@ -55,6 +55,89 @@ imports are listed; it does not resolve a complete framework dependency closure.
 Input identifiers are declarations, not signature/authenticity verification.
 Unit tests use synthetic fixtures, not redistributed Apple app binaries.
 
+## Source-checked routes around the framework gap
+
+These are findings from upstream documentation, **not experiments reproduced in
+ACCI or on the owner's Android 16 phone**. A source describing a successful
+research setup is not a downloadable, verified Android emulator.
+
+### Full-system emulation of an older iOS — relevant research candidate
+
+Instead of replacing MobileSafariUI on Android, run a matching iOS system and
+application inside a virtual device. This is an architectural alternative to
+reimplementing the application's entire framework dependency closure.
+
+[eShard's iOS 14 / QEMU investigation, part I](https://www.eshard.com/blog/emulating-ios-14-with-qemu)
+and [part II](https://www.eshard.com/blog/emulating-ios-14-with-qemu-part2)
+describe a research setup with graphical applications, touch input and networking.
+The authors also describe important limits: missing hardware facilities,
+applications needing newer iOS versions, and applications requiring Metal.
+Their setup includes modifications to system components; it must not be treated
+as an unmodified, generally available iPhone runtime. This repository does not
+provide activation, account, pairing, signature or encryption bypasses.
+
+**Not established here:** a reproducible released set of all needed components,
+an Android port, Safari execution on Android, usable performance, or arbitrary
+IPA support. The Safari 27.0 **simulator** application inspected above is not an
+interchangeable input for an older iOS **device** image.
+
+There is also concrete legacy GUI work:
+[QEMU-iOS](https://github.com/devos50/qemu-ios) targets the iPod Touch 1G/2G, and
+[its author's iPhoneOS 1.0 account](https://devos50.github.io/blog/2022/ipod-touch-qemu)
+describes display rendering and touch input. This establishes a narrow historical
+precedent, not compatibility with modern Safari, current games or Android 16.
+
+Conversely, [darwin-vm](https://github.com/jprx/darwin-vm) explicitly says that it
+boots a command-line environment, not a full iPhone/Mac with graphics or GUI
+applications. Its supported-boot table must not be cited as proof that Safari runs.
+
+### Existing compatibility layers — reusable ideas, different limits
+
+- [touchHLE](https://github.com/touchHLE/touchHLE/blob/trunk/README.md) supports an
+  AArch64 Android host, but targets early iPhone OS 2.x/3.x and iOS 4.0.x
+  applications; its stated goals explicitly exclude 64-bit iOS. This is a
+  candidate for selected older games, not the inspected ARM64 Safari.
+- [unidbg](https://github.com/zhkl0228/unidbg/blob/master/README.md) documents
+  ARM32/ARM64 and experimental iOS/Objective-C/Swift execution support. It is an
+  execution/research building block, not evidence of a complete Safari GUI,
+  MobileSafariUI implementation or Android browser product.
+- [Darling](https://www.darlinghq.org/) treats iOS support as a long-term goal and
+  identifies UIKit implementation as a major missing piece.
+  [ipasim](https://github.com/ipasimulator/ipasim) targets Windows and says that
+  only simple applications currently work. Neither is a verified drop-in
+  solution for the target phone.
+
+### Different deliverables that must not be silently substituted
+
+- **Old Windows Safari under a Windows compatibility environment:** Apple
+  [identifies Safari 5.1.7 as the final, outdated Windows version](https://support.apple.com/en-us/102665);
+  [Winlator](https://github.com/brunodev85/winlator) runs Windows applications
+  through Wine and Box86/Box64 on Android. Combining those facts is only an
+  **untested candidate**, not proof of Safari compatibility. The old Apple
+  installer URL checked during this investigation returned 404; no installer was
+  obtained or run. This is not iOS Safari and is not a safe substitute for a
+  maintained browser or a place to enter personal credentials.
+- **Remote Apple-hosted execution:** remote iOS devices are an existing service
+  category, for example [BrowserStack's device cloud](https://www.browserstack.com/mobile-device-testing).
+  An Apple-hosted browser with a remote client is a deployment alternative, not
+  local IPA execution or offline use on Android. No remote session, new service,
+  account or paid plan has been enabled.
+- **Android WebKit application:** see the WPE route below. The engine is real,
+  but it does not supply the original Safari application or an iOS runtime.
+
+### Gate before claiming the emulator works
+
+The full-system route is worth a bounded feasibility experiment, not a promise
+of universal compatibility. First establish available, lawfully usable inputs
+and reproducibility of the required open-source components, without bypassing
+account or signing protections. Then test a minimal, self-authored application
+and display/input path in an isolated environment before integrating an Android
+shell. A Safari milestone would require the matching application/runtime to
+render a controlled local test page on the actual Android device, with recorded
+launch, input, output and failure evidence. A shell boot, parser test, Mac
+simulator run, screenshot from another project or a green CI badge is not that
+milestone. No such experiment or Android execution has been performed here.
+
 ## Separate open-source route — not the original Safari app
 
 [Igalia WPE Android](https://github.com/Igalia/wpe-android/blob/main/README.md)
