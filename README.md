@@ -5,11 +5,8 @@ Give an approved coding agent this repository, a task, and access to the target
 GitHub project. It can follow the same documented edit → test → build →
 inspect → fix → verify → PR workflow without this chat or a Notion account.
 
-**Publication status:** the portable version is ready for owner review on
-`acci/portable-agent-handoff`. Public visibility, a distribution license, and
-merging into the default branch require the owner's final approval.
-Do not describe the current private/unlicensed snapshot as a released
-open-source project.
+**License:** [MIT](LICENSE). Use, modify, and redistribute the source under
+the terms of that license.
 
 - **For agents:** read [AGENTS.md](AGENTS.md).
 - **Для владельца:** [как передать проект другому ИИ + готовое сообщение](docs/START_HERE.ru.md).
@@ -47,8 +44,6 @@ Windows/macOS host support for the local orchestrator is not claimed.
 ```bash
 git clone https://github.com/kyoroshyvtuber-lgtm/acci-toolkit.git
 cd acci-toolkit
-# Until the portable PR is merged:
-git switch acci/portable-agent-handoff
 bash bin/bootstrap.sh --dev
 source .venv/bin/activate
 export ACCI_HOME="$HOME/.local/share/acci"  # private runtime state, outside this checkout
@@ -126,4 +121,4 @@ and CI again.
   Use a separate credential-free container/VM for untrusted code.
 - Work on task branches and PRs; get approval before merging, public releases,
   visibility/access changes, destructive operations, or paid services.
-- Open-source publication needs an explicit license chosen by the owner.
+- This repository is MIT-licensed; respect licenses of dependencies and target projects.

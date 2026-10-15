@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "toolkit_version": "0.2.0",
-  "exported_at": "2026-10-15T13:16:39Z",
+  "exported_at": "2026-10-15T13:24:39Z",
   "state": {
     "task": "Prepare a portable GitHub-based ACCI toolkit and an owner-approved public open-source release",
     "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
     "branch": "acci/portable-agent-handoff",
-    "stage": "publication:blocked",
+    "stage": "publication:approved",
     "plan": [
       "portable-implementation",
       "local-validation",
@@ -16,7 +16,6 @@
       "public-publication"
     ],
     "remaining": [
-      "license-approval",
       "merge",
       "public-publication"
     ],
@@ -40,6 +39,18 @@
         "step": "publication",
         "status": "blocked",
         "note": "Owner must choose a license and approve merge/publication; MIT is proposed, not granted"
+      },
+      {
+        "ts": "2026-10-15T13:24:39Z",
+        "step": "license-approval",
+        "status": "done",
+        "note": "Owner explicitly approved MIT, merging PR #1, and public repository visibility"
+      },
+      {
+        "ts": "2026-10-15T13:24:39Z",
+        "step": "publication",
+        "status": "start",
+        "note": "Checkpoint before approved administrative operations; inspect live PR/visibility before repeating them"
       }
     ],
     "attempts": {

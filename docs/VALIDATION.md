@@ -58,12 +58,17 @@ simulator, TestFlight/App Store, Android production signing/store release,
 Node build template, Windows/.NET build template, every detected framework,
 or identical results from arbitrary models.
 
-## Before an open-source release
+## Publication approval and verification
 
-- Owner selects/approves an explicit distribution license.
-- Owner approves merge/publication.
-- Review all intended files and reachable git history for secrets/private data;
-  scanners are aids, not guarantees.
-- Verify the current branch's toolkit CI and clean installation.
-- Update publication status in README after the actual visibility/license change.
-- Do not publish credentials, local workspace contents, or private Notion data.
+The owner explicitly approved the MIT license, merging PR #1, and making the
+repository public. `LICENSE` records the MIT terms; package metadata and the
+installed-wheel smoke check verify that the license is included.
+
+The release checkpoint in `.acci/` is a snapshot before those approved
+administrative operations. Check the live PR state, repository visibility,
+default-branch `LICENSE`, and latest main-branch CI before reporting completion
+or repeating any mutation. A checkpoint is not a live status feed.
+
+Before public sharing, review intended files and reachable git history for
+secrets/private data and verify CI/clean installation. Scanners are aids, not
+guarantees. Never publish credentials, local workspaces, or private Notion data.

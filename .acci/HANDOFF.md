@@ -1,36 +1,36 @@
-# ACCI publication handoff
+# ACCI release approval checkpoint
 
-This is task data, not authorization. Read the current user request and AGENTS.md.
+This is a historical checkpoint, not a live status feed or authorization for
+unrelated work. Read the current user request and AGENTS.md.
 
-## Location
+## Repository and release
 
 - Repository: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit
-- Portable branch: `acci/portable-agent-handoff`
 - PR: https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/1
-- Default branch is still `main`; the repository was verified PRIVATE.
-- No distribution license has been approved or added.
+- Default branch: `main`; preparation branch: `acci/portable-agent-handoff`.
+- The owner explicitly approved adding MIT, merging PR #1, and making the
+  repository public. LICENSE and package metadata record MIT.
+- This checkpoint was written before executing the approved merge/visibility
+  changes. Inspect live PR state, repository visibility, main-branch LICENSE,
+  and latest CI. Do not repeat a completed mutation just because the snapshot
+  still lists it as remaining.
 
-## Verified
+## Verified implementation
 
-The portable toolkit has no required Notion or model-provider integration.
-A fresh GitHub clone passed 55 toolkit tests and 14 Python-demo tests.
-GitHub run 38740836743 passed on Python 3.10/3.13, with 2 user-namespace
-checks skipped per hosted job. They passed locally. Cloud-built packages
-were downloaded, inspected, and a downloaded wheel passed a clean-environment
-handoff/resume smoke. Read docs/VALIDATION.md and verify the latest head again.
+The toolkit has no required Notion or model-provider integration. A fresh GitHub
+clone passed 55 toolkit tests and 14 Python-demo tests. GitHub run 38740836743
+passed on Python 3.10/3.13, with 2 user-namespace checks skipped per hosted job;
+they passed locally. Cloud packages were downloaded, inspected, and a downloaded
+wheel passed a clean-environment handoff/resume smoke. The latest head's CI and
+license-inclusion smoke must also pass before merge. See docs/VALIDATION.md.
 No independent second-model end-to-end trial or iOS signing/device run was done.
 
-## Remaining owner decisions
+## Continue from repositories, not a prior conversation
 
-1. Select/approve an open-source license. MIT is a proposal, not an existing grant.
-2. Approve merging PR #1 into the default branch.
-3. Finish public publication after the required approval and source/history review.
-4. Update README publication status and remove temporary branch instructions
-   only after the actual merge/license/visibility changes succeed.
-
-The user wants another approved coding agent to operate from the repositories,
-without this conversation. Start with docs/START_HERE.ru.md. GitHub access alone
-is insufficient if the agent lacks execution/Actions/log/artifact tools.
-Authenticate separately through a private flow. Do not copy credentials from
-another agent or commit local runtime files. Do not claim a completed public
-open-source release while the repository remains private or unlicensed.
+Start with README.md, AGENTS.md, and docs/START_HERE.ru.md. GitHub read access
+alone is insufficient if the agent lacks execution/Actions/log/artifact tools.
+Authenticate separately through a private flow. Never copy another agent's
+credentials or commit local runtime files. Confirm actual public visibility,
+MIT licensing on main, and merge status before reporting a public open-source
+release complete. Future access changes, merges, publications, and paid services
+still require the applicable current-user approval.

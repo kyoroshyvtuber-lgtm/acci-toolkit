@@ -23,6 +23,6 @@ The CLI must include its CI templates when installed. Add regression tests for
 behavior changes and document limitations instead of silently weakening checks.
 Do not commit runtime data, secrets, build outputs, or credentials.
 
-Repository visibility and an explicit license are separate requirements for
-open-source distribution. The owner must approve the license and public
-publication before this project is described as a completed open-source release.
+This project is licensed under MIT; see `LICENSE`. Contributions must be
+compatible with that license. Do not add third-party source without preserving
+its required notices and checking its license.

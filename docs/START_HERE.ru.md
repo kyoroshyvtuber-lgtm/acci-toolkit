@@ -12,7 +12,6 @@
 
 ```text
 Используй https://github.com/kyoroshyvtuber-lgtm/acci-toolkit.
-До слияния переносимой версии используй ветку acci/portable-agent-handoff.
 Прочитай README.md, AGENTS.md и docs/ACCESS.md.
 Не полагайся на предыдущие чаты: всё необходимое должно быть в репозиториях.
 

@@ -1,5 +1,6 @@
 """Run with a freshly wheel-installed Python, from outside the source checkout."""
 import json
+from importlib import metadata
 import os
 from pathlib import Path
 import subprocess
@@ -38,8 +39,14 @@ def main():
             [sys.executable, "-c", "import acci; print(acci.__file__)"],
             cwd=root, env=clean, text=True).strip()
         assert "site-packages" in package, f"Not a wheel install: {package}"
+        distribution = metadata.distribution("acci-toolkit")
+        assert distribution.metadata["License-Expression"] == "MIT"
+        license_file = next(path for path in distribution.files
+                            if str(path).endswith(".dist-info/licenses/LICENSE"))
+        assert "Permission is hereby granted" in distribution.locate_file(license_file).read_text()
         print("Installed wheel: init → state → template → handoff → resume OK")
         print("Isolated environments: no inherited provider, GitHub, or Notion configuration")
+        print("Installed wheel license: MIT, license text included")
 
 
 if __name__ == "__main__":
