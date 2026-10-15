@@ -1,0 +1,98 @@
+{
+  "schema_version": 1,
+  "toolkit_version": "0.2.0",
+  "exported_at": "2026-10-15T17:53:31Z",
+  "state": {
+    "task": "Investigate original iOS Safari on Android; a separate WPE WebKit port must never be called Safari IPA execution",
+    "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
+    "branch": "acci/safari-investigation",
+    "stage": "runtime-implementation:blocked",
+    "plan": [
+      "inspect",
+      "static-probe",
+      "probe-tests",
+      "safari-input",
+      "report",
+      "runtime-implementation",
+      "device-test"
+    ],
+    "remaining": [
+      "runtime-implementation",
+      "device-test"
+    ],
+    "steps": [
+      {
+        "ts": "2026-10-15T17:20:54Z",
+        "step": "inspect",
+        "status": "done",
+        "note": "Verified Igalia wpe-android README and WPE Android support docs: actual WebKit port, arm64/x86_64, sample browser. Original Safari binary and target Android device are not supplied; no claim of Safari execution"
+      },
+      {
+        "ts": "2026-10-15T17:23:42Z",
+        "step": "static-probe",
+        "status": "done",
+        "note": "Implemented read-only Mach-O/app-bundle inspector for thin/universal 32/64-bit headers, platform/minimum OS, direct dylib imports and encryption declarations. This is not an emulator and performs no decryption or execution"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "probe-tests",
+        "status": "done",
+        "note": "15 synthetic format tests passed through ACCI with network disabled and orchestrator secrets hidden. Inspector also parsed the real dev.acci.demo app archive from CI run 38764650240; x86_64/iOS-simulator metadata matched. This is parser verification, not Safari or Android execution"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "safari-input",
+        "status": "blocked",
+        "note": "Original Safari.app/IPA and exact iOS version not supplied. No Safari binary has been inspected or executed. Do not obtain it through piracy, bypass protections or request an Apple ID password"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "device-test",
+        "status": "blocked",
+        "note": "Target Android device/model/version not supplied. Android SDK/ADB absent locally. No Android runtime/device test or Safari APK was produced"
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "safari-input",
+        "status": "done",
+        "note": "Supersedes the earlier missing-reference blocker: original com.apple.mobilesafari 27.0, build 8625.1.29.10.29, was statically read in preinstalled iOS Simulator 27.0 on GitHub xcode-27. This is a simulator reference, NOT an acquired iPhone device IPA. No Safari execution or Apple binary redistribution."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "probe-tests",
+        "status": "done",
+        "note": "22 synthetic format/collector tests passed locally through ACCI with network disabled and orchestrator secrets hidden, and in Mac CI 38780015419. Metadata artifact had exactly JSON, SUMMARY.md and SHA256SUMS; both file hashes verified. Base local toolkit tests 55 and demo tests 14 passed; toolkit CI 38780015120 succeeded at code checkpoint 5bef3848f8405f131aff724476db25a5c3944a4d."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "report",
+        "status": "done",
+        "note": "Recorded exact Safari version, ARM64/iOS-simulator platform, SHA-256, direct imports and limitations in experiments/safari_android/VALIDATION.md. Documentation is not proof of runtime compatibility. Main remains unchanged; no release or merge approval."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "device-test",
+        "status": "blocked",
+        "note": "Owner identified realme GT Neo 5 SE; manufacturer confirms Snapdragon 7+ Gen 2. Installed Android version and actual ABI have not been read from the device. No physical-device test, Safari APK or Android execution occurred."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "runtime-implementation",
+        "status": "blocked",
+        "note": "No Android-compatible iOS runtime, Darwin system-service layer or Apple framework implementation exists in this experiment. Direct main-executable imports include Foundation, MobileSafariUI, libSystem.B and libobjc.A; their recursive dependency closure is unresolved. Matching ARM64 alone is insufficient. Do not substitute a reskinned browser or call WPE original Safari execution."
+      }
+    ],
+    "attempts": {},
+    "links": {
+      "wpe": "https://github.com/Igalia/wpe-android/blob/main/README.md",
+      "android_docs": "https://people.igalia.com/aperez/Documentation/wpe-webkit/android.html",
+      "reference_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38764650240",
+      "research_source": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/acci/safari-investigation/experiments/safari_android",
+      "original_safari_inspection": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015419",
+      "metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015419/artifacts/11995256286",
+      "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015120",
+      "phone_specification": "https://www.realme.com/cn/realme-gt-neo-5-se",
+      "official_safari_listing": "https://apps.apple.com/sc/app/safari/id1146562112"
+    }
+  }
+}

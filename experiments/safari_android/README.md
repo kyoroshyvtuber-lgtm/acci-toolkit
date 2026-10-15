@@ -6,6 +6,9 @@ working Safari APK. No Safari-on-Android execution is claimed.**
 The owner wants original iOS applications on a realme GT Neo 5 SE, not a browser
 reskinned to look like Safari. Do not silently replace that goal with a WebView app.
 
+See [the recorded source inspection](VALIDATION.md) for the actual Safari build,
+verified evidence and remaining execution blockers.
+
 ## Sources and acquisition boundaries
 
 - [Official Safari App Store page](https://apps.apple.com/sc/app/safari/id1146562112).
@@ -62,3 +65,18 @@ the original iOS Safari binary and needs an explicitly agreed scope.
 This investigation lives in a source checkout; it is not part of the installed
 ACCI CLI package. Do not merge, publish a release, enable a paid service, or
 claim a supported Android application based only on a successful metadata job.
+
+## Task checkpoint for another agent
+
+The research-specific checkpoint is in [.acci/HANDOFF.md](.acci/HANDOFF.md) and
+[.acci/handoff.json](.acci/handoff.json), not the repository root's older task
+checkpoint. Review the recorded limitations and verify current remote results.
+From the repository root, after installing ACCI, it can be restored with:
+
+```bash
+acci resume safari-android-research \
+  --from experiments/safari_android/.acci/handoff.json
+```
+
+This restores task state only, not an Apple runtime, binaries, credentials,
+downloaded artifacts or a working Android application.
