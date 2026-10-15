@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
   "toolkit_version": "0.3.0",
-  "exported_at": "2026-10-15T15:35:55Z",
+  "exported_at": "2026-10-15T15:54:22Z",
   "state": {
     "task": "Improve ACCI for agent-assisted iOS apps/games: native simulator validation, guarded IPA export, game profiles and opt-in bounded task executor",
     "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
     "branch": "acci/ios-agent-readiness",
-    "stage": "verification:pending-follow-up",
+    "stage": "verification:complete-awaiting-review",
     "plan": [
       "implementation",
       "local-validation",
@@ -15,7 +15,6 @@
       "owner-review-and-merge"
     ],
     "remaining": [
-      "ios-artifact-verification",
       "owner-review-and-merge"
     ],
     "steps": [
@@ -27,22 +26,22 @@
       {
         "step": "local-validation",
         "status": "done",
-        "note": "111 toolkit + 14 demo tests passed after follow-up; prior clean-wheel/helper/offline-preview smoke and anonymous clone/bootstrap/tests passed; source/history findings reviewed"
+        "note": "111 toolkit + 14 demo tests passed; anonymous public clone at bc5d603 independently bootstrapped and passed all tests with empty HOME/no inherited credentials. Downloaded current wheel passed isolated helper/offline-preview/handoff smoke; source/history findings reviewed"
       },
       {
         "step": "python-godot-cloud",
         "status": "done",
-        "note": "Python 3.10/3.13 each 107 passed and 2 namespace skips; 14 demo tests. Godot gameplay/export/package launch passed; downloaded packages/JUnit/hashes checked and cloud game package relaunched"
+        "note": "Toolkit run 38761755776: Python 3.10/3.13 each 109 passed, 2 namespace skips, 14 demo passes; downloaded packages/JUnit/integrity checked. Godot run 38758019951: four gameplay checks, export/package launch, downloaded hash and relaunch checked; game files unchanged since c8ee68d"
       },
       {
         "step": "ios-artifact-verification",
-        "status": "start",
-        "note": "Run 38758019836 compiled and passed 3 unit tests; UI initialization timed out with Xcode 16.4 against iOS 26.2. Runtime selection is now capped by active Xcode SDK; full follow-up CI required, UI tests not skipped"
+        "status": "done",
+        "note": "Run 38761755508 at bc5d603: Xcode 16.4, SDK/runtime 18.5, iPhone 16/x86_64. Three unit + one UI tests passed, zero failures/skips; install/launch/screenshot/app ZIP succeeded. Downloaded SHA256SUMS, app/xcresult ZIP integrity, simulator metadata checked and screenshot viewed. Previous SDK/runtime accessibility failure preserved in docs/VALIDATION.md"
       },
       {
         "step": "owner-review-and-merge",
         "status": "blocked",
-        "note": "No approval to merge this new PR. Earlier approval covered PR #1/public MIT publication only"
+        "note": "Open the PR for this branch if none exists, inspect latest head/checks and obtain owner merge approval. Do not duplicate an existing PR. Earlier approval covered PR #1/public MIT publication only"
       },
       {
         "step": "optional-provider-activation",
@@ -61,9 +60,10 @@
     },
     "links": {
       "repo": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit",
-      "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019821",
+      "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755776",
       "godot_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019951",
-      "ios_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836"
+      "ios_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755508",
+      "ios_prior_failure": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836"
     }
   }
 }

@@ -2,43 +2,62 @@
 
 ## v0.3: iOS, games and optional bounded executor
 
-Initial implementation checkpoint:
-`c8ee68ddc2a1930557a340a674608709f1e0c2a0` on `acci/ios-agent-readiness`.
+Verified implementation checkpoint:
+`bc5d603f8bf916f1470148a39c33fee01fc893bd` on `acci/ios-agent-readiness`.
 This is a task branch, not an approved merge or package/store release.
 
-- Local Linux/Python 3.13: **109 toolkit tests and 14 Python-demo tests passed**.
+- Local Linux/Python 3.13: **111 toolkit tests and 14 Python-demo tests passed**.
   Bash syntax, Python compilation, source scan and reachable-history scan checked.
   Only the existing deliberately synthetic `client_secret` fixture was found.
-- [Toolkit run 38758019821](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019821):
-  Python 3.10/3.13 each recorded **107 passed, 2 skipped**, plus 14 demo tests.
+- [Toolkit run 38761755776](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755776):
+  Python 3.10/3.13 each recorded **109 passed, 2 skipped**, plus 14 demo tests.
   The skips are the existing user-namespace checks unavailable on hosted Linux;
   they passed locally. Both jobs built wheel/sdist and passed clean-wheel smoke,
   including helper/template extraction, engine plan and offline agent preview.
 - Both cloud package sets were downloaded; JUnit totals, ZIP integrity, required
-  source-distribution files and SHA-256 were checked. A separate anonymous clone
-  of this branch with empty HOME/no inherited GitHub/provider/Notion credentials
-  passed independent bootstrap and all 109 tests.
+  source-distribution files and SHA-256 were checked. A downloaded Python 3.13
+  wheel also passed the installed-wheel smoke outside the checkout. A separate
+  anonymous clone at this checkpoint, with empty HOME/no inherited GitHub/
+  provider/Notion credentials, passed independent bootstrap, all 111 toolkit
+  tests and all 14 Python-demo tests.
+- [iOS run 38761755508](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755508):
+  Xcode 16.4, SDK/runtime 18.5, iPhone 16 simulator, x86_64. **Three unit tests
+  and one UI test passed**, with zero failures or skips. The UI scenario checked
+  launch, arithmetic, three score-increment taps and reset. Installation,
+  separate launch, screenshot capture and app packaging succeeded.
+  Downloaded `result.json`, test summary and every `SHA256SUMS` entry were checked;
+  both app and `.xcresult` ZIPs passed integrity checks. App metadata confirms
+  `iphonesimulator`, not `iphoneos`. The screenshot was viewed: calculation 42,
+  score 0 and both controls visible without clipping. No cleanup warning was
+  recorded. [Evidence artifact](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38761755508/artifacts/11986668320)
+  is subject to Actions retention; it is not a permanent release.
 - [Godot run 38758019951](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019951):
   pinned, checksum-verified Godot 4.7.2 imported the fixture, passed four gameplay
   checks, exported `.pck` and launched that package. The downloaded cloud package
   passed its SHA-256 check and launched again locally without credentials.
+  This run used `c8ee68d`; the game source/profile is unchanged at this checkpoint.
   This is a resource pack, **not an iOS/standalone game build**.
-- [iOS run 38758019836](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836):
-  application compilation and **three unit tests passed**, but the UI runner
-  timed out loading Accessibility. Evidence shows active Xcode 16.4 with selected
-  iOS 26.2. The follow-up caps runtime selection at the active Xcode SDK; UI tests
-  remain required. No completed UI/launch result is claimed yet. The earlier ARM
-  runner never acquired a machine due to GitHub capacity; no code step ran there.
-
-Follow-up local result: **111 toolkit tests and 14 demo tests passed**. Added
-regressions cover active-SDK runtime selection and exact proposal-bundle digest.
-The agent workflow now pins immutable artifact IDs and trusted proposal SHA-256,
-not artifact names. Cloud follow-up is pending at this checkpoint.
 
 The optional full Godot export-template installer was also run locally with
 release SHA-256 verification, followed by native Linux debug export (executable
 plus resource pack) and a successful headless launch. This is additional local
 engine/export validation, not an iOS, rendering or finished-game claim.
+
+### Investigation history
+
+- [iOS run 38758019836](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019836):
+  application compilation and **three unit tests passed**, but the UI runner
+  timed out loading Accessibility. Evidence shows active Xcode 16.4 with selected
+  iOS 26.2. Runtime selection was capped at the active Xcode SDK; the complete
+  follow-up above passed without skipping UI tests. The earlier ARM
+  runner never acquired a machine due to GitHub capacity; no code step ran there.
+- [Earlier toolkit run 38758019821](https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38758019821)
+  at `c8ee68d` passed 107 tests with two namespace skips per Python version.
+  The two added regressions cover active-SDK runtime selection and exact
+  proposal-bundle digest. Proposal downloads now pin immutable artifact IDs and
+  trusted proposal SHA-256, not artifact names.
+
+### Disabled and unverified paths
 
 The optional executor remains disabled in `.acci/agent.json`, with no provider
 or model chosen. Provider adapters, scope guards, exact-base apply, separate-job
