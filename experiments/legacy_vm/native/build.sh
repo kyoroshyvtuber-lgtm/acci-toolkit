@@ -30,6 +30,12 @@ if [[ "$abi" != linux ]]; then
   export LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
   export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig"
   export PKG_CONFIG_PATH="$PKG_CONFIG_LIBDIR"
+  cat > "$work/pkg-config-static" <<'EOF'
+#!/bin/sh
+exec /usr/bin/pkg-config --static "$@"
+EOF
+  chmod +x "$work/pkg-config-static"
+  export PKG_CONFIG="$work/pkg-config-static"
   cat > "$prefix/lib/pkgconfig/zlib.pc" <<EOF
 Name: zlib
 Description: Android system zlib
@@ -42,7 +48,7 @@ c = '$CC'
 cpp = '$CXX'
 ar = '$AR'
 strip = '$STRIP'
-pkgconfig = 'pkg-config'
+pkgconfig = '$PKG_CONFIG'
 [host_machine]
 system = 'android'
 cpu_family = '$meson_cpu'

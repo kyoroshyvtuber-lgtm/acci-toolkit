@@ -108,6 +108,17 @@ def patch_qemu(q, android):
     # The product intentionally contains only the test board and legacy iPod
     # board, not a collection of unrelated emulators or host-sharing devices.
     (q / "configs/devices/arm-softmmu/default.mak").write_text("CONFIG_VERSATILE=y\nCONFIG_IPOD_TOUCH=y\n")
+    # Upstream relied on unrelated default-enabled boards to pull in these
+    # device dependencies. Declare them explicitly without adding more boards.
+    replace_once(q / "hw/arm/Kconfig", "config EXYNOS4\n    bool\n",
+                 "config EXYNOS4\n    bool\n    select EXYNOS4210_UART\n")
+    replace_once(q / "hw/arm/Kconfig", "config IPOD_TOUCH\n    bool\n    select IPOD_TOUCH\n    select PL192",
+                 "config IPOD_TOUCH\n    bool\n    select EXYNOS4210_UART\n    select PFLASH_CFI02\n    select SSI\n    select PL192")
+    with (q / "hw/char/Kconfig").open("a") as out:
+        out.write("\nconfig EXYNOS4210_UART\n    bool\n")
+    replace_once(q / "hw/char/meson.build",
+                 "softmmu_ss.add(when: 'CONFIG_EXYNOS4', if_true: files('exynos4210_uart.c'))",
+                 "softmmu_ss.add(when: 'CONFIG_EXYNOS4210_UART', if_true: files('exynos4210_uart.c'))")
     if android:
         # Like Termux's Android port, omit ivshmem (Android has no SysV SHM).
         # No guest access to a host directory, KVM, network or shared memory.
