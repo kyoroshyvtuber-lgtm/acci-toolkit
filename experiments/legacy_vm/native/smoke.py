@@ -96,6 +96,9 @@ class Rfb:
         from PIL import Image
         Image.frombytes("RGB", (self.w, self.h), bytes(self.pixels), "raw", "BGRX").save(path)
 
+    def pixel(self, x, y):
+        return struct.unpack_from("<I", self.pixels, (y*self.w+x)*4)[0] & 0xffffff
+
 
 def wait_for(predicate, process, seconds=30):
     deadline = time.monotonic() + seconds
@@ -135,6 +138,8 @@ def main(binary, guest, output):
             if (client.w, client.h) != (640, 480):
                 raise AssertionError(f"expected 640x480 guest, received {client.w}x{client.h}")
             client.save(output / "01-boot.png")
+            if client.pixel(20,20) != 0x0d1117 or client.pixel(250,330) != 0x30363d:
+                raise AssertionError("guest framebuffer pixels do not match the boot screen")
             before = hashlib.sha256(client.pixels).hexdigest()
             # A key must traverse RFB -> QEMU -> emulated PL050 -> guest code.
             client.key(ord("a"), True)
@@ -143,6 +148,8 @@ def main(binary, guest, output):
             time.sleep(0.2)
             client.frame()
             client.save(output / "02-input.png")
+            if client.pixel(250,330) != 0x123821:
+                raise AssertionError("guest did not draw its input confirmation")
             after = hashlib.sha256(client.pixels).hexdigest()
             if before == after:
                 raise AssertionError("input marker arrived but the framebuffer did not change")
@@ -153,6 +160,8 @@ def main(binary, guest, output):
                 "frame": [client.w, client.h], "uart_boot": True, "uart_input": True,
                 "frame_changed_after_key": True, "frame_before_sha256": before,
                 "frame_after_sha256": after, "host": "Linux x86_64",
+                "framebuffer_pixels_verified": True,
+                "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             }
             (output / "evidence.json").write_text(json.dumps(evidence, indent=2) + "\n")
             print(json.dumps(evidence))

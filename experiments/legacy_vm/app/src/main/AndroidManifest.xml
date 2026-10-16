@@ -3,6 +3,7 @@
     <application android:label="ACCI Legacy VM"
         android:icon="@drawable/ic_launcher"
         android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:supportsRtl="true"
         android:extractNativeLibs="true"
         android:theme="@style/AppTheme">

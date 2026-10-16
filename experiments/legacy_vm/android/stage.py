@@ -44,7 +44,9 @@ def main(repo, artifacts, downloads, out, commit, run_url):
     guest = artifacts/"legacy-native-linux/guest/smoke.elf"
     identity["guest_sha256"] = checked(guest,guest.parent/"SHA256SUMS")
     linux_evidence = json.loads((artifacts/"legacy-native-linux/smoke/evidence.json").read_text())
-    if linux_evidence.get("ios") is not False or not linux_evidence.get("uart_input") or not linux_evidence.get("frame_changed_after_key"):
+    if (linux_evidence.get("ios") is not False or not linux_evidence.get("uart_input") or
+        not linux_evidence.get("frame_changed_after_key") or not linux_evidence.get("framebuffer_pixels_verified") or
+        linux_evidence.get("guest_sha256") != identity["guest_sha256"]):
         raise ValueError("missing actual Linux guest evidence")
     shutil.copy2(guest,assets/"smoke.elf")
     keymap = artifacts/"legacy-native-linux/linux/keymaps/en-us"
@@ -58,6 +60,19 @@ def main(repo, artifacts, downloads, out, commit, run_url):
     notices = ["ACCI Legacy VM", "Wrapper and guest: MIT (see repository LICENSE).",
                "Emulator executable: GPL-2.0. Complete corresponding source accompanies this APK.",
                "No Apple code or firmware is included.", ""]
+    toolchain_notices = []
+    notice_assets = assets/"notices"
+    notice_assets.mkdir(exist_ok=True)
+    for filename in ("NDK-NOTICE.toolchain","NDK-NOTICE","ndk-source.properties","compiler-version.txt"):
+        path = artifacts/"legacy-native-arm64-v8a/arm64-v8a"/filename
+        if path.exists():
+            shutil.copy2(path,notice_assets/filename)
+            toolchain_notices.append(path)
+    if not any(p.name=="NDK-NOTICE.toolchain" for p in toolchain_notices):
+        raise ValueError("missing NDK runtime license notices")
+    notices.extend(["NDK r29 standard C/C++ runtime and compiler support libraries.",
+        "See the complete NDK notices bundled in assets/generated/notices/ and in the source ZIP.",
+        "NDK toolchain: https://developer.android.com/ndk/downloads",""])
     archive_paths = []
     for source in lock["sources"]:
         archive = downloads/source["filename"]
@@ -89,6 +104,8 @@ def main(repo, artifacts, downloads, out, commit, run_url):
         z.writestr("source/SOURCE-FILES.txt","\n".join(files)+"\n")
         for archive in archive_paths:
             z.write(archive,"upstream/"+archive.name,compress_type=zipfile.ZIP_STORED)
+        for notice in toolchain_notices:
+            z.write(notice,"toolchain-notices/"+notice.name)
         z.writestr("BUILD-IDENTITY.json",json.dumps(identity,indent=2)+"\n")
         z.writestr("README.txt","Complete corresponding source for this prototype APK.\n"
             "ACCI-authored source and build recipes: source/experiments/legacy_vm/\n"

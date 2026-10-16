@@ -102,11 +102,19 @@ public final class MainActivity extends Activity implements EngineController.Lis
         TextView contract = text("Формат: manifest.json, bootrom.bin, iboot.bin, nor.bin и nand/bank0…7/*.page. Только структура — не проверка совместимости.",14,MUTED,false);
         add(profile,contract,12);
         LinearLayout about = card(page,"Открытый и проверяемый");
-        add(about,text("QEMU 6.2.50 • GPL-2.0\nОболочка и тестовый гость • MIT\nAndroid 9+ • ARM64 / x86_64",16,FG,false),12);
+        add(about,text("QEMU 6.2.50 • GPL-2.0\nОболочка и тестовый гость • MIT\nХост: Android 9+, ARM64 / x86_64\nТестовый гость: ARM32",16,FG,false),12);
         TextView source = text("Исходники, лицензии и инструкции",16,BLUE,true);
-        source.setMinHeight(dp(48)); source.setGravity(Gravity.CENTER_VERTICAL);
+        source.setMinHeight(dp(48)); source.setGravity(Gravity.CENTER_VERTICAL); source.setFocusable(true);
         source.setOnClickListener(v -> {
-            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/acci/safari-investigation/experiments/legacy_vm"));
+            String revision = "acci/safari-investigation";
+            try (InputStream in = getAssets().open("generated/build-identity.json");
+                 ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+                byte[] b = new byte[4096]; int n;
+                while ((n=in.read(b))!=-1) { if(out.size()+n>65536) throw new IOException("Identity size"); out.write(b,0,n); }
+                String commit = new org.json.JSONObject(new String(out.toByteArray(),StandardCharsets.UTF_8)).getString("app_source_commit");
+                if (commit.matches("[0-9a-f]{40}")) revision=commit;
+            } catch (Exception ignored) {}
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/"+revision+"/experiments/legacy_vm"));
             try { startActivity(i); } catch (ActivityNotFoundException ignored) {}
         });
         add(about,source,12);

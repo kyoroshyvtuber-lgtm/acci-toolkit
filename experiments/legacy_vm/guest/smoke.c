@@ -52,17 +52,22 @@ void guest_main(void) {
     MMIO(0x10120004)=H-1;
     MMIO(0x10120008)=0;
     MMIO(0x10120010)=0x01000000;
-    MMIO(0x1012001c)=1|(5<<1)|(1<<5)|(1<<8)|(1<<11);
+    /* Versatile's PL110 swaps the control/interrupt-mask register offsets. */
+    MMIO(0x10120018)=1|(5<<1)|(1<<5)|(1<<8)|(1<<11);
     MMIO(0x10006000)=4; /* enable the PL050 keyboard controller */
     say("ACCI_VM_BOOT_OK\n");
+    int release = 0;
     for (;;) {
         if (MMIO(0x10006004)&16) {
             u32 key=MMIO(0x10006008);
-            if(key!=0xfa && key!=0xaa && key!=0) {
+            if (key == 0xf0) { release = 1; continue; }
+            /* PS/2 set 2 A make code; ignore VNC modifier synchronization. */
+            if(key==0x1c && !release) {
                 box(240,320,340,64,0x123821);
                 text(268,336,"OK",5,0x3fb950);
                 say("ACCI_INPUT_OK\n");
             }
+            release = 0;
         }
     }
 }

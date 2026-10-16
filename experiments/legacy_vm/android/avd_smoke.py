@@ -73,11 +73,14 @@ def main(apk,out):
         time.sleep(1)
         screenshot(out,"00-home")
         tap("start_self_test")
-        boot=wait(lambda: (d if (d:=evidence()).get("uart_boot") and d.get("frames",0)>=3 else None))
+        boot=wait(lambda: (d if (d:=evidence()).get("uart_boot") and d.get("frames",0)>=3
+            and d.get("frame_width")==640 and d.get("frame_height")==480
+            and d.get("background_pixel_rgb")==0x0d1117 and d.get("input_pixel_rgb")==0x30363d else None))
         (out/"01-boot.json").write_text(json.dumps(boot,indent=2))
         top(); screenshot(out,"01-boot")
         tap("send_test_key")
-        entered=wait(lambda: (d if (d:=evidence()).get("uart_input") else None))
+        entered=wait(lambda: (d if (d:=evidence()).get("uart_input") and d.get("input_pixel_rgb")==0x123821
+            and d.get("frame_argb32be_sha256")!=boot.get("frame_argb32be_sha256") else None))
         (out/"02-input.json").write_text(json.dumps(entered,indent=2))
         top(); screenshot(out,"02-input")
         tap("show_log"); screenshot(out,"03-journal")
@@ -106,7 +109,8 @@ def main(apk,out):
             "abi": adb("shell","getprop","ro.product.cpu.abi").decode().strip(),
             "android_page_size": adb("shell","getconf","PAGE_SIZE").decode().strip(),
             "app": PACKAGE, "apk": apk.name, "uart_boot": True,"uart_input": True,
-            "framebuffer_frames": entered["frames"], "stop_button": True,
+            "framebuffer_frames": entered["frames"], "framebuffer_pixels_verified":True,
+            "frame_changed_after_key":True, "stop_button": True,
             "background_stops_engine": True, "ios_boot_verified":False,
             "safari_verified":False, "physical_realme_tested":False,
         }

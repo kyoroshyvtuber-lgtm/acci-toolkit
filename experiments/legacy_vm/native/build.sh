@@ -86,7 +86,7 @@ Libs: -L$prefix/lib -lfdt
 Cflags: -I$prefix/include
 EOF
   extra=(--cpu="$cpu" --cross-prefix="$tool/$triple-" --cc="$CC" --cxx="$CXX" \
-    --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS" \
+    --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS -static-libstdc++" \
     --with-coroutine=sigaltstack)
 fi
 mkdir -p "$work/qemu-build"
@@ -103,6 +103,11 @@ cp "$work/qemu-build/qemu-system-arm" "/work/dist/$abi/libacci_qemu.so"
 if [[ "$abi" != linux ]]; then
   "$STRIP" --strip-unneeded "/work/dist/$abi/libacci_qemu.so"
   "$tool/llvm-readelf" -h -l -d "/work/dist/$abi/libacci_qemu.so" > "/work/dist/$abi/elf.txt"
+  cp /ndk/source.properties "/work/dist/$abi/ndk-source.properties"
+  "$CXX" --version > "/work/dist/$abi/compiler-version.txt"
+  test -s /ndk/NOTICE.toolchain
+  cp /ndk/NOTICE.toolchain "/work/dist/$abi/NDK-NOTICE.toolchain"
+  if [[ -f /ndk/NOTICE ]]; then cp /ndk/NOTICE "/work/dist/$abi/NDK-NOTICE"; fi
 fi
 cp "$qemu/COPYING" "/work/dist/$abi/QEMU-COPYING"
 mkdir -p "/work/dist/$abi/keymaps"

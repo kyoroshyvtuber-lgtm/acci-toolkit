@@ -157,6 +157,29 @@ def prepare(lock, downloads, output, android=False):
         target.rmdir()
         shutil.copytree(roots[source], target)
     shutil.copytree(roots["proxy-libintl"], roots["glib"] / "subprojects/proxy-libintl")
+    replace_once(
+        roots["glib"] / "subprojects/proxy-libintl/meson.build",
+        """intl_shr = shared_library('intl',
+  'libintl.c',
+  c_args: ['-DSTUB_ONLY'],
+  install : true)
+
+intl_sta = static_library ('intl',
+  objects: intl_shr.extract_all_objects(),
+  c_args: ['-DSTUB_ONLY'],
+  install : true)
+
+if get_option('default_library') == 'static'
+  intl_lib = intl_sta
+else
+  intl_lib = intl_shr
+endif""",
+        """# This product statically links the gettext fallback into QEMU.
+intl_lib = static_library('intl',
+  'libintl.c',
+  c_args: ['-DSTUB_ONLY'],
+  install : true)""",
+    )
     patch_qemu(q, android)
     result = {k: str(v) for k, v in roots.items()}
     (output / "roots.json").write_text(json.dumps(result, indent=2))

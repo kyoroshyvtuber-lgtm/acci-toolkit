@@ -7,7 +7,9 @@ import android.os.Build;
 import org.json.JSONObject;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.security.MessageDigest;
 import java.util.concurrent.*;
 
 /** Owns exactly one child process; never exposes a network listener. */
@@ -23,6 +25,8 @@ public final class EngineController {
     private volatile RfbProtocol rfb;
     private volatile boolean running, stopRequested, boot, input;
     private volatile int frames;
+    private volatile int frameWidth, frameHeight, inputPixel = -1, backgroundPixel = -1;
+    private volatile String frameSha256 = "";
     private volatile boolean selfTest;
     private volatile String lastError = "";
     private long generation;
@@ -40,6 +44,7 @@ public final class EngineController {
         if (running) return;
         running = true; stopRequested = false; selfTest = self;
         boot = false; input = false; frames = 0; lastError = "";
+        frameWidth = frameHeight = 0; inputPixel = backgroundPixel = -1; frameSha256 = "";
         synchronized (log) { log.setLength(0); }
         listener.state("Подготовка движка…", true, false);
         long session = ++generation;
@@ -100,7 +105,21 @@ public final class EngineController {
             boolean shownBoot = false, shownInput = false;
             while (!stopRequested && process.isAlive()) {
                 client.frame(); frames++;
-                listener.frame(client.width(), client.height(), client.pixels());
+                int[] pixels = client.pixels();
+                frameWidth = client.width(); frameHeight = client.height();
+                if (frames == 1 || frames % 20 == 0 || shownBoot != boot || shownInput != input) {
+                    ByteBuffer bytes = ByteBuffer.allocate(pixels.length*4);
+                    for (int pixel : pixels) bytes.putInt(pixel);
+                    byte[] digest = MessageDigest.getInstance("SHA-256").digest(bytes.array());
+                    StringBuilder hex = new StringBuilder(64);
+                    for (byte b : digest) { hex.append("0123456789abcdef".charAt((b&255)>>>4)); hex.append("0123456789abcdef".charAt(b&15)); }
+                    frameSha256 = hex.toString();
+                    if (self && frameWidth == 640 && frameHeight == 480) {
+                        backgroundPixel = pixels[20*640+20] & 0xffffff;
+                        inputPixel = pixels[330*640+250] & 0xffffff;
+                    }
+                }
+                listener.frame(frameWidth, frameHeight, pixels);
                 if (frames == 1 || frames % 20 == 0) evidence();
                 if (frames == 1 || shownBoot != boot || shownInput != input) {
                     listener.state(status(), true, true);
@@ -185,6 +204,9 @@ public final class EngineController {
                 o.put("self_test", selfTest); o.put("ios_boot_verified", false); o.put("safari_verified", false);
                 o.put("uart_boot", boot); o.put("uart_input", input); o.put("frames", frames);
                 o.put("running", running); o.put("error", lastError);
+                o.put("frame_width", frameWidth); o.put("frame_height", frameHeight);
+                o.put("frame_argb32be_sha256", frameSha256);
+                o.put("background_pixel_rgb", backgroundPixel); o.put("input_pixel_rgb", inputPixel);
                 o.put("abi", Build.SUPPORTED_ABIS[0]); o.put("sdk", Build.VERSION.SDK_INT);
                 o.put("engine_commit", ProfileContract.ENGINE);
                 File tmp = new File(context.getFilesDir(), "last-run.tmp"), dest = new File(context.getFilesDir(), "last-run.json");
