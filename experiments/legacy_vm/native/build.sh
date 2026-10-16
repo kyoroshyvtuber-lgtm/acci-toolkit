@@ -24,6 +24,7 @@ if [[ "$abi" != linux ]]; then
   export PATH="$tool:$PATH"
   export CC="$tool/${triple}28-clang" CXX="$tool/${triple}28-clang++"
   export AR="$tool/llvm-ar" RANLIB="$tool/llvm-ranlib" STRIP="$tool/llvm-strip"
+  export NM="$tool/llvm-nm" OBJCOPY="$tool/llvm-objcopy" LD="$tool/ld.lld"
   prefix="$work/prefix"
   mkdir -p "$prefix/lib/pkgconfig" "$prefix/include"
   export CFLAGS="-O2 -fPIC"

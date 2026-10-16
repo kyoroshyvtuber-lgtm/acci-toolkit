@@ -1,0 +1,11 @@
+<resources>
+    <item type="id" name="start_self_test"/>
+    <item type="id" name="stop_engine"/>
+    <item type="id" name="send_test_key"/>
+    <item type="id" name="guest_framebuffer"/>
+    <item type="id" name="engine_status"/>
+    <item type="id" name="import_profile"/>
+    <item type="id" name="run_profile"/>
+    <item type="id" name="show_log"/>
+    <item type="id" name="show_licenses"/>
+</resources>

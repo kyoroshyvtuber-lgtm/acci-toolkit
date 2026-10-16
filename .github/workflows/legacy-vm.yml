@@ -12,6 +12,32 @@ concurrency:
   group: legacy-vm-${{ github.ref }}-${{ github.sha }}
   cancel-in-progress: false
 jobs:
+  android-unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - name: Test Android source independently of native compilation
+        working-directory: experiments/legacy_vm
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-android-unit-tests
+          path: |
+            experiments/legacy_vm/app/build/test-results/
+            experiments/legacy_vm/app/build/reports/
+          if-no-files-found: warn
+          retention-days: 14
   native:
     runs-on: ubuntu-24.04
     timeout-minutes: 45
@@ -96,4 +122,76 @@ jobs:
           name: legacy-native-${{ matrix.abi }}
           path: ${{ runner.temp }}/work/dist/
           if-no-files-found: error
+          retention-days: 14
+  android:
+    needs: [native, android-unit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: legacy-native-*
+          path: ${{ runner.temp }}/native-artifacts
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.13"
+      - name: Verify pinned archives and stage audited native files
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 experiments/legacy_vm/native/fetch_sources.py experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/downloads"
+          python3 experiments/legacy_vm/android/stage.py "$GITHUB_WORKSPACE" \
+            "$RUNNER_TEMP/native-artifacts" "$RUNNER_TEMP/downloads" "$RUNNER_TEMP/delivery" \
+            "$GITHUB_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+      - name: Unit tests, lint and APK build
+        working-directory: experiments/legacy_vm
+        run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
+      - name: Verify APK, manifest, signature and hashes
+        shell: bash
+        run: |
+          set -euo pipefail
+          SDK="$ANDROID_HOME/build-tools/36.0.0"
+          test -x "$SDK/apksigner"
+          cp experiments/legacy_vm/app/build/outputs/apk/debug/app-debug.apk "$RUNNER_TEMP/delivery/acci-legacy-vm-0.1.0-debug.apk"
+          APK="$RUNNER_TEMP/delivery/acci-legacy-vm-0.1.0-debug.apk"
+          "$SDK/apksigner" verify --verbose --print-certs "$APK" > "$RUNNER_TEMP/delivery/apk-signature.txt"
+          "$SDK/aapt" dump badging "$APK" > "$RUNNER_TEMP/delivery/apk-badging.txt"
+          "$SDK/aapt" dump permissions "$APK" > "$RUNNER_TEMP/delivery/apk-permissions.txt"
+          if grep -q "uses-permission" "$RUNNER_TEMP/delivery/apk-permissions.txt"; then
+            echo "Unexpected requested permission"; exit 1
+          fi
+          python3 experiments/legacy_vm/android/apk_check.py "$APK" "$RUNNER_TEMP/delivery/APK-VERIFICATION.json"
+          (cd "$RUNNER_TEMP/delivery"; sha256sum *.apk *.zip BUILD-IDENTITY.json APK-VERIFICATION.json > SHA256SUMS)
+      - name: Allow KVM on the disposable runner
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Execute packaged engine on Android 16 x86_64
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7
+          emulator-boot-timeout: 600
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -memory 3072 -cores 2
+          script: python3 experiments/legacy_vm/android/avd_smoke.py "$RUNNER_TEMP/delivery/acci-legacy-vm-0.1.0-debug.apk" "$RUNNER_TEMP/delivery/android-smoke"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-vm-apk-source-and-evidence
+          path: |
+            ${{ runner.temp }}/delivery/
+            experiments/legacy_vm/app/build/test-results/
+            experiments/legacy_vm/app/build/reports/
+          if-no-files-found: warn
           retention-days: 14
