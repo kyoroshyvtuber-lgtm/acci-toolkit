@@ -2,9 +2,21 @@
 # Runs INSIDE the credential-free, offline build container.
 set -euo pipefail
 abi="${1:?linux|arm64-v8a|x86_64}"
+case "$abi" in linux|arm64-v8a|x86_64) ;; *) echo "unsupported ABI" >&2; exit 2 ;; esac
 project=/project
 work="/work/$abi"
 mkdir -p "$work" /work/dist
+preserve_logs() {
+  result=$?
+  mkdir -p "/work/dist/$abi"
+  for relative in qemu-build/config.log qemu-build/meson-logs/meson-log.txt glib-build/meson-logs/meson-log.txt; do
+    if [[ -f "$work/$relative" ]]; then
+      cp "$work/$relative" "/work/dist/$abi/$(echo "$relative" | tr / _)"
+    fi
+  done
+  return "$result"
+}
+trap preserve_logs EXIT
 export HOME="$work/home"
 mkdir -p "$HOME"
 android=()
@@ -22,7 +34,22 @@ if [[ "$abi" != linux ]]; then
     *) echo "unsupported ABI" >&2; exit 2 ;;
   esac
   export PATH="$tool:$PATH"
-  export CC="$tool/${triple}28-clang" CXX="$tool/${triple}28-clang++"
+  export CC="$tool/${triple}28-clang"
+  real_cxx="$tool/${triple}28-clang++"
+  cat > "$work/cxx-static" <<EOF
+#!/bin/bash
+# Only C++ link commands get this driver flag. Passing it to C/PIE
+# configuration probes produces an unused-argument error under -Werror.
+for arg do
+  case "\$arg" in
+    -c|-S|-E|-fsyntax-only|--version|-v|-dumpmachine|-dumpversion|--print-*|-print-*)
+      exec "$real_cxx" "\$@" ;;
+  esac
+done
+exec "$real_cxx" -static-libstdc++ "\$@"
+EOF
+  chmod +x "$work/cxx-static"
+  export CXX="$work/cxx-static"
   export AR="$tool/llvm-ar" RANLIB="$tool/llvm-ranlib" STRIP="$tool/llvm-strip"
   export NM="$tool/llvm-nm" OBJCOPY="$tool/llvm-objcopy" LD="$tool/ld.lld"
   prefix="$work/prefix"
@@ -86,7 +113,7 @@ Libs: -L$prefix/lib -lfdt
 Cflags: -I$prefix/include
 EOF
   extra=(--cpu="$cpu" --cross-prefix="$tool/$triple-" --cc="$CC" --cxx="$CXX" \
-    --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS -static-libstdc++" \
+    --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS" \
     --with-coroutine=sigaltstack)
 fi
 mkdir -p "$work/qemu-build"

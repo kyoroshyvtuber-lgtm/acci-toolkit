@@ -78,6 +78,7 @@ jobs:
           fi
           test -f "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
           cat "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
+          test -s "$ANDROID_HOME/ndk/$NDK_VERSION/NOTICE.toolchain"
       - name: Test source extraction guards
         run: python3 -m unittest discover -s experiments/legacy_vm/tests -v
       - name: Download and verify pinned open-source archives
