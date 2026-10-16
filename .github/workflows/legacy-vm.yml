@@ -1,0 +1,82 @@
+name: ACCI Legacy VM prototype
+on:
+  push:
+    branches: ["acci/safari-investigation"]
+    paths:
+      - "experiments/legacy_vm/**"
+      - ".github/workflows/legacy-vm.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: legacy-vm-${{ github.ref }}-${{ github.sha }}
+  cancel-in-progress: false
+jobs:
+  native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        abi: [linux, arm64-v8a, x86_64]
+    env:
+      NDK_VERSION: 29.0.14206865
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Pin the Android toolchain
+        shell: bash
+        run: |
+          if [ ! -d "$ANDROID_HOME/ndk/$NDK_VERSION" ]; then
+            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" >/dev/null
+          fi
+          test -f "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
+          cat "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
+      - name: Download and verify pinned open-source archives
+        run: python3 experiments/legacy_vm/native/fetch_sources.py experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/downloads"
+      - name: Create isolated build container
+        run: docker build -t acci-legacy-builder experiments/legacy_vm/native
+      - name: Build actual native emulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/work/dist"
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" \
+            -v "$GITHUB_WORKSPACE/experiments/legacy_vm:/project:ro" \
+            -v "$RUNNER_TEMP/downloads:/downloads:ro" \
+            -v "$ANDROID_HOME/ndk/$NDK_VERSION:/ndk:ro" \
+            -v "$RUNNER_TEMP/work:/work" \
+            acci-legacy-builder bash /project/native/build.sh "${{ matrix.abi }}" \
+            2>&1 | tee "$RUNNER_TEMP/work/dist/build-${{ matrix.abi }}.log"
+      - name: Compile our ARM guest and run CPU/display/input smoke test
+        if: matrix.abi == 'linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm --network none --cap-drop ALL --security-opt no-new-privileges \
+            --user "$(id -u):$(id -g)" \
+            -v "$GITHUB_WORKSPACE/experiments/legacy_vm:/project:ro" \
+            -v "$ANDROID_HOME/ndk/$NDK_VERSION:/ndk:ro" \
+            -v "$RUNNER_TEMP/work:/work" \
+            acci-legacy-builder bash -c \
+            'bash /project/native/build_guest.sh /ndk /work/dist/guest &&
+             /work/dist/linux/libacci_qemu.so -machine help > /work/dist/linux/machines.txt &&
+             python3 /project/native/smoke.py /work/dist/linux/libacci_qemu.so /work/dist/guest/smoke.elf /work/dist/smoke'
+      - name: Record exact build identity
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/work/dist"
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/work/dist/source-commit.txt"
+          cp experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/work/dist/"
+          git ls-files experiments/legacy_vm/native experiments/legacy_vm/guest experiments/legacy_vm/sources.lock.json |
+            sort | xargs sha256sum > "$RUNNER_TEMP/work/dist/build-inputs.sha256"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: legacy-native-${{ matrix.abi }}
+          path: ${{ runner.temp }}/work/dist/
+          if-no-files-found: error
+          retention-days: 14
