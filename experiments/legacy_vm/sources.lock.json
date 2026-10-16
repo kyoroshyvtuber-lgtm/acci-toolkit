@@ -49,6 +49,14 @@
       "filename": "keycodemapdb.tar.gz",
       "sha256": "fbb05b1a14a46b9eb77e1a561a1a0995398dfc0dcb8f865a9b2ab7139a62439c",
       "license": "See upstream LICENSE files and generated-file headers"
+    },
+    {
+      "name": "proxy-libintl",
+      "version": "0.1 / e792f40de9b2d5c660003276c022ba8d3038fe62",
+      "url": "https://codeload.github.com/frida/proxy-libintl/legacy.tar.gz/e792f40de9b2d5c660003276c022ba8d3038fe62",
+      "filename": "proxy-libintl.tar.gz",
+      "sha256": "2f35907628e8ea59b82a8bbf0390783d77a750c84cee190072ce95d956eb4d1d",
+      "license": "LGPL-2.0-or-later"
     }
   ]
 }

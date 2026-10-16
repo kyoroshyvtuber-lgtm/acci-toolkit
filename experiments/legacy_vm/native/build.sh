@@ -30,6 +30,12 @@ if [[ "$abi" != linux ]]; then
   export LDFLAGS="-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
   export PKG_CONFIG_LIBDIR="$prefix/lib/pkgconfig"
   export PKG_CONFIG_PATH="$PKG_CONFIG_LIBDIR"
+  cat > "$prefix/lib/pkgconfig/zlib.pc" <<EOF
+Name: zlib
+Description: Android system zlib
+Version: 1.2.8
+Libs: -lz
+EOF
   cat > "$work/cross.ini" <<EOF
 [binaries]
 c = '$CC'
@@ -50,7 +56,7 @@ EOF
   (cd "$work/ffi-build"; "$ffi/configure" --host="$triple" --prefix="$prefix" --libdir="$prefix/lib" --disable-shared --enable-static --disable-docs; make -j"$jobs"; make install)
   glib="$(root glib)"
   meson setup "$work/glib-build" "$glib" --cross-file "$work/cross.ini" --prefix "$prefix" --libdir lib \
-    --default-library static --buildtype release -Dinternal_pcre=true -Diconv=libc \
+    --default-library static --buildtype release --wrap-mode nodownload -Dinternal_pcre=true -Diconv=libc \
     -Dlibmount=disabled -Dselinux=disabled -Dxattr=false -Dman=false -Dgtk_doc=false \
     -Dinstalled_tests=false -Dnls=disabled -Dsysprof=disabled
   ninja -C "$work/glib-build" -j"$jobs"
@@ -72,12 +78,6 @@ Version: 1.7.0
 Libs: -L$prefix/lib -lfdt
 Cflags: -I$prefix/include
 EOF
-  cat > "$prefix/lib/pkgconfig/zlib.pc" <<EOF
-Name: zlib
-Description: Android system zlib
-Version: 1.2.8
-Libs: -lz
-EOF
   extra=(--cpu="$cpu" --cross-prefix="$tool/$triple-" --cc="$CC" --cxx="$CXX" --ar="$AR" \
     --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS" \
     --with-coroutine=sigaltstack)
@@ -86,7 +86,7 @@ mkdir -p "$work/qemu-build"
 (
   cd "$work/qemu-build"
   "$qemu/configure" --target-list=arm-softmmu --without-default-features \
-    --enable-system --disable-user --enable-tcg --enable-vnc --enable-pixman --enable-fdt \
+    --enable-system --disable-user --enable-tcg --enable-vnc --enable-fdt \
     --disable-tools --disable-docs --disable-blobs --disable-werror --enable-pie \
     --with-git-submodules=ignore --audio-drv-list= --meson=meson "${extra[@]}"
   ninja -j"$jobs" qemu-system-arm
@@ -98,4 +98,4 @@ if [[ "$abi" != linux ]]; then
   "$tool/llvm-readelf" -h -l -d "/work/dist/$abi/libacci_qemu.so" > "/work/dist/$abi/elf.txt"
 fi
 cp "$qemu/COPYING" "/work/dist/$abi/QEMU-COPYING"
-sha256sum "/work/dist/$abi/libacci_qemu.so" > "/work/dist/$abi/SHA256SUMS"
+(cd "/work/dist/$abi"; sha256sum libacci_qemu.so > SHA256SUMS)

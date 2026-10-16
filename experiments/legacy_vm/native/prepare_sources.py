@@ -129,6 +129,7 @@ def prepare(lock, downloads, output, android=False):
     q = roots["qemu"]
     (q / "ui/keycodemapdb").rmdir()
     shutil.copytree(roots["keycodemapdb"], q / "ui/keycodemapdb")
+    shutil.copytree(roots["proxy-libintl"], roots["glib"] / "subprojects/proxy-libintl")
     patch_qemu(q, android)
     result = {k: str(v) for k, v in roots.items()}
     (output / "roots.json").write_text(json.dumps(result, indent=2))

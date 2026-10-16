@@ -25,7 +25,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - uses: actions/cache@v4
+        id: native-cache
+        with:
+          path: ${{ runner.temp }}/work/dist
+          key: legacy-native-v1-${{ matrix.abi }}-${{ hashFiles('experiments/legacy_vm/native/**', 'experiments/legacy_vm/guest/**', 'experiments/legacy_vm/sources.lock.json') }}
+      - name: Verify exact cached inputs and outputs
+        if: steps.native-cache.outputs.cache-hit == 'true'
+        shell: bash
+        run: |
+          sha256sum --check "$RUNNER_TEMP/work/dist/build-inputs.sha256"
+          (cd "$RUNNER_TEMP/work/dist/${{ matrix.abi }}"; sha256sum --check SHA256SUMS)
       - name: Pin the Android toolchain
+        if: steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           if [ ! -d "$ANDROID_HOME/ndk/$NDK_VERSION" ]; then
@@ -36,10 +48,13 @@ jobs:
       - name: Test source extraction guards
         run: python3 -m unittest discover -s experiments/legacy_vm/tests -v
       - name: Download and verify pinned open-source archives
+        if: steps.native-cache.outputs.cache-hit != 'true'
         run: python3 experiments/legacy_vm/native/fetch_sources.py experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/downloads"
       - name: Create isolated build container
+        if: steps.native-cache.outputs.cache-hit != 'true'
         run: docker build -t acci-legacy-builder experiments/legacy_vm/native
       - name: Build actual native emulator
+        if: steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -53,7 +68,7 @@ jobs:
             acci-legacy-builder bash /project/native/build.sh "${{ matrix.abi }}" \
             2>&1 | tee "$RUNNER_TEMP/work/dist/build-${{ matrix.abi }}.log"
       - name: Compile our ARM guest and run CPU/display/input smoke test
-        if: matrix.abi == 'linux'
+        if: matrix.abi == 'linux' && steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -67,7 +82,7 @@ jobs:
              /work/dist/linux/libacci_qemu.so -machine help > /work/dist/linux/machines.txt &&
              python3 /project/native/smoke.py /work/dist/linux/libacci_qemu.so /work/dist/guest/smoke.elf /work/dist/smoke'
       - name: Record exact build identity
-        if: always()
+        if: always() && steps.native-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/work/dist"

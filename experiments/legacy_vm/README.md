@@ -17,7 +17,7 @@ receive input before an APK can be described as an emulator prototype.
 
 ## Reproducible engine inputs
 
-`sources.lock.json` pins six source archives and SHA-256 values. QEMU is
+`sources.lock.json` pins seven source archives and SHA-256 values. QEMU is
 devos50/qemu-ios `ipod_touch_1g`, commit
 `501c85c4f8a3503965e38d5d4f30a02c4bc9171c` (QEMU 6.2.50).
 `native/prepare_sources.py` applies reviewed source transformations. It does not
@@ -39,6 +39,7 @@ execution. They do **not** establish iOS/Safari compatibility.
 ACCI-authored wrapper, guest and build scripts: repository MIT license.
 The linked emulator is **GPL-2.0**, not MIT; GLib is LGPL-2.1-or-later.
 libffi and pixman are permissive; libfdt uses its upstream BSD/GPL dual license.
+The Android gettext fallback proxy-libintl is LGPL-2.0-or-later.
 Preserve upstream notices and provide complete corresponding source/build
 recipes alongside any distributed APK. See the source lock and archived
 upstream license files. No Apple firmware, apps, logos or account data belong in

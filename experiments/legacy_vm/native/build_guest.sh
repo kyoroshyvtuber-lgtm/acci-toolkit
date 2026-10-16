@@ -9,4 +9,4 @@ mkdir -p "$out"
   -ffreestanding -fno-builtin -fno-stack-protector -nostdlib -O2 \
   -Wl,-T,"$here/guest/link.ld" \
   "$here/guest/start.S" "$here/guest/smoke.c" -o "$out/smoke.elf"
-sha256sum "$out/smoke.elf" > "$out/SHA256SUMS"
+(cd "$out"; sha256sum smoke.elf > SHA256SUMS)
