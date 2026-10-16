@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "toolkit_version": "0.2.0",
+  "exported_at": "2026-10-15T18:24:13Z",
+  "state": {
+    "task": "Investigate original iOS Safari on Android; a separate WPE WebKit port must never be called Safari IPA execution",
+    "repo": "kyoroshyvtuber-lgtm/acci-toolkit",
+    "branch": "acci/safari-investigation",
+    "stage": "runtime-implementation:blocked",
+    "plan": [
+      "inspect",
+      "static-probe",
+      "probe-tests",
+      "safari-input",
+      "report",
+      "route-research",
+      "runtime-implementation",
+      "device-test"
+    ],
+    "remaining": [
+      "runtime-implementation",
+      "device-test"
+    ],
+    "steps": [
+      {
+        "ts": "2026-10-15T17:20:54Z",
+        "step": "inspect",
+        "status": "done",
+        "note": "Verified Igalia wpe-android README and WPE Android support docs: actual WebKit port, arm64/x86_64, sample browser. Original Safari binary and target Android device are not supplied; no claim of Safari execution"
+      },
+      {
+        "ts": "2026-10-15T17:23:42Z",
+        "step": "static-probe",
+        "status": "done",
+        "note": "Implemented read-only Mach-O/app-bundle inspector for thin/universal 32/64-bit headers, platform/minimum OS, direct dylib imports and encryption declarations. This is not an emulator and performs no decryption or execution"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "probe-tests",
+        "status": "done",
+        "note": "15 synthetic format tests passed through ACCI with network disabled and orchestrator secrets hidden. Inspector also parsed the real dev.acci.demo app archive from CI run 38764650240; x86_64/iOS-simulator metadata matched. This is parser verification, not Safari or Android execution"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "safari-input",
+        "status": "blocked",
+        "note": "Original Safari.app/IPA and exact iOS version not supplied. No Safari binary has been inspected or executed. Do not obtain it through piracy, bypass protections or request an Apple ID password"
+      },
+      {
+        "ts": "2026-10-15T17:25:37Z",
+        "step": "device-test",
+        "status": "blocked",
+        "note": "Target Android device/model/version not supplied. Android SDK/ADB absent locally. No Android runtime/device test or Safari APK was produced"
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "safari-input",
+        "status": "done",
+        "note": "Supersedes the earlier missing-reference blocker: original com.apple.mobilesafari 27.0, build 8625.1.29.10.29, was statically read in preinstalled iOS Simulator 27.0 on GitHub xcode-27. This is a simulator reference, NOT an acquired iPhone device IPA. No Safari execution or Apple binary redistribution."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "probe-tests",
+        "status": "done",
+        "note": "22 synthetic format/collector tests passed locally through ACCI with network disabled and orchestrator secrets hidden, and in Mac CI 38780015419. Metadata artifact had exactly JSON, SUMMARY.md and SHA256SUMS; both file hashes verified. Base local toolkit tests 55 and demo tests 14 passed; toolkit CI 38780015120 succeeded at code checkpoint 5bef3848f8405f131aff724476db25a5c3944a4d."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "report",
+        "status": "done",
+        "note": "Recorded exact Safari version, ARM64/iOS-simulator platform, SHA-256, direct imports and limitations in experiments/safari_android/VALIDATION.md. Documentation is not proof of runtime compatibility. Main remains unchanged; no release or merge approval."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "device-test",
+        "status": "blocked",
+        "note": "Owner identified realme GT Neo 5 SE; manufacturer confirms Snapdragon 7+ Gen 2. Installed Android version and actual ABI have not been read from the device. No physical-device test, Safari APK or Android execution occurred."
+      },
+      {
+        "ts": "2026-10-15T17:53:31Z",
+        "step": "runtime-implementation",
+        "status": "blocked",
+        "note": "No Android-compatible iOS runtime, Darwin system-service layer or Apple framework implementation exists in this experiment. Direct main-executable imports include Foundation, MobileSafariUI, libSystem.B and libobjc.A; their recursive dependency closure is unresolved. Matching ARM64 alone is insufficient. Do not substitute a reskinned browser or call WPE original Safari execution."
+      },
+      {
+        "ts": "2026-10-15T17:56:43Z",
+        "step": "report",
+        "status": "done",
+        "note": "Published research source/docs/separate nested handoff at 9dc045f976636d7d541e0c9e06a2213b7a956a37; opened draft PR 3, no merge or release. Final Safari CI 38781195030 succeeded with 22 tests; logs read and metadata artifact hashes verified. Final base CI 38781195142 succeeded: 53 passed/2 skipped plus 14 demo tests on Python 3.10 and 3.13. Main remains faf77202f607780d664afb88e139b9b1b146177b. No Android/Safari execution or working APK."
+      },
+      {
+        "ts": "2026-10-15T17:57:13Z",
+        "step": "pr-checks",
+        "status": "done",
+        "note": "Draft PR 3 CI 38781437353 completed successfully at 9dc045f976636d7d541e0c9e06a2213b7a956a37; logs inspected. Python 3.10/3.13 each report 53 toolkit tests passed, 2 skipped, plus 14 demo tests passed. These do not verify Safari runtime compatibility."
+      },
+      {
+        "ts": "2026-10-15T18:10:18Z",
+        "step": "device-target",
+        "status": "done",
+        "note": "Owner now reports Android 16 installed on realme GT Neo 5 SE. This supersedes the earlier unknown Android version as an owner report only, not an ADB or physical-device verification. Actual ABI remains specification-based, and tested_on_owner_device remains false. No Safari APK, Android execution or compatible iOS runtime has been produced."
+      },
+      {
+        "ts": "2026-10-15T18:12:19Z",
+        "step": "device-target-publication",
+        "status": "done",
+        "note": "Owner-reported Android 16 saved and remotely read back at commit 0911f510bb6a58bbb5d1871ba9705552c83e8d78 in existing draft PR 3. Local 22 tool tests passed; metadata CI 38783494737 succeeded; PR toolkit CI 38783502554 succeeded and logs reviewed. Push toolkit CI 38783494949 was cancelled as a duplicate by concurrency. No merge, Android device test or Safari launch."
+      },
+      {
+        "ts": "2026-10-15T18:24:13Z",
+        "step": "route-research",
+        "status": "done",
+        "note": "Read upstream technical sources. Relevant architectural alternative: full-system emulation of matching older iOS rather than rewriting MobileSafariUI. eShard describes iOS 14 GUI/touch/network/application research with substantial system modifications and hardware/Metal/version limitations; not reproduced here and no Android port established. QEMU-iOS provides legacy iPod Touch GUI precedent. darwin-vm explicitly lacks GUI. touchHLE excludes 64-bit iOS; unidbg is experimental execution support, not a proven browser GUI; Darling/iPasim are not drop-in Android solutions. Windows Safari 5.1.7 plus Winlator is an untested, outdated, different-platform candidate; old Apple installer URL returned 404, nothing downloaded/run. WPE and remote Apple-hosted execution remain distinct deliverables. No Apple images, protection-bypass patches, new services or APK were obtained, executed or published. Source-based findings and next validation gates recorded in experiment README."
+      }
+    ],
+    "attempts": {},
+    "links": {
+      "wpe": "https://github.com/Igalia/wpe-android/blob/main/README.md",
+      "android_docs": "https://people.igalia.com/aperez/Documentation/wpe-webkit/android.html",
+      "reference_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38764650240",
+      "research_source": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/acci/safari-investigation/experiments/safari_android",
+      "original_safari_inspection": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015419",
+      "metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015419/artifacts/11995256286",
+      "toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38780015120",
+      "phone_specification": "https://www.realme.com/cn/realme-gt-neo-5-se",
+      "official_safari_listing": "https://apps.apple.com/sc/app/safari/id1146562112",
+      "research_pr": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/pull/3",
+      "final_safari_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030",
+      "final_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195142",
+      "final_metadata_artifact": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781195030/artifacts/11994949688",
+      "published_checkpoint": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/tree/9dc045f976636d7d541e0c9e06a2213b7a956a37/experiments/safari_android",
+      "pr_toolkit_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38781437353",
+      "android16_target_commit": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/commit/0911f510bb6a58bbb5d1871ba9705552c83e8d78",
+      "android16_pr_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38783502554",
+      "android16_metadata_ci": "https://github.com/kyoroshyvtuber-lgtm/acci-toolkit/actions/runs/38783494737",
+      "qemu_ios14_research_part1": "https://www.eshard.com/blog/emulating-ios-14-with-qemu",
+      "qemu_ios14_research_part2": "https://www.eshard.com/blog/emulating-ios-14-with-qemu-part2",
+      "legacy_qemu_ios": "https://github.com/devos50/qemu-ios",
+      "legacy_gui_account": "https://devos50.github.io/blog/2022/ipod-touch-qemu",
+      "touchhle": "https://github.com/touchHLE/touchHLE/blob/trunk/README.md",
+      "darwin_vm_limits": "https://github.com/jprx/darwin-vm",
+      "unidbg": "https://github.com/zhkl0228/unidbg/blob/master/README.md",
+      "darling_ios_status": "https://www.darlinghq.org/",
+      "ipasim": "https://github.com/ipasimulator/ipasim",
+      "winlator": "https://github.com/brunodev85/winlator",
+      "apple_windows_safari_status": "https://support.apple.com/en-us/102665"
+    }
+  }
+}

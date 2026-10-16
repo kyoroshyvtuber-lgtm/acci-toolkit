@@ -1,0 +1,42 @@
+name: Safari source investigation (metadata only)
+on:
+  push:
+    branches: ["acci/safari-investigation"]
+    paths:
+      - "experiments/safari_android/**"
+      - ".github/workflows/safari-investigation.yml"
+permissions:
+  contents: read
+concurrency:
+  group: safari-source-investigation
+  cancel-in-progress: true
+jobs:
+  inspect:
+    # Standard ARM preview image, not a paid larger/-xlarge runner.
+    runs-on: xcode-27
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Test parser and collector; no app execution
+        run: |
+          python3 -m unittest discover -s experiments/safari_android -p 'test_*.py' -v
+      - name: Inspect preinstalled Safari without copying Apple software
+        run: |
+          python3 experiments/safari_android/inspect_installed_safari.py \
+            --out "$RUNNER_TEMP/safari-evidence"
+      - name: Preserve metadata only
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-metadata-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/safari-evidence/*.json
+            ${{ runner.temp }}/safari-evidence/*.md
+            ${{ runner.temp }}/safari-evidence/SHA256SUMS
+          if-no-files-found: warn
+          retention-days: 14
