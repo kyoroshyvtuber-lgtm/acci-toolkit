@@ -55,7 +55,9 @@ public final class EngineController {
         Thread reader = null;
         try {
             if (run.exists()) ProfileImporter.remove(run);
-            if (!new File(run, "empty").mkdirs()) throw new IOException("Cannot create private run directory");
+            if (!new File(run, "data/keymaps").mkdirs()) throw new IOException("Cannot create private run directory");
+            try (InputStream in = context.getAssets().open("generated/keymaps/en-us");
+                 OutputStream out = new FileOutputStream(new File(run,"data/keymaps/en-us"))) { transfer(in,out); }
             File guest = new File(run, "smoke.elf");
             File profile = null;
             if (self) {

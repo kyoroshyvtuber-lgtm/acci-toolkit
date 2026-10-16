@@ -33,7 +33,7 @@ From the repository root:
 
 ```bash
 P="$PWD/experiments/legacy_vm"
-W="$PWD/.legacy-work"
+W="${TMPDIR:-/tmp}/acci-legacy-build-$(date +%s)"
 NDK="$ANDROID_HOME/ndk/29.0.14206865"
 mkdir -p "$W/downloads" "$W/work"
 python3 "$P/native/fetch_sources.py" "$P/sources.lock.json" "$W/downloads"

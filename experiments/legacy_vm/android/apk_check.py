@@ -24,6 +24,8 @@ def check(apk, output):
                 file=Path(tmp)/"engine";file.write_bytes(data);inspect(file,machine)
         if hashlib.sha256(z.read("assets/generated/smoke.elf")).hexdigest()!=identity["guest_sha256"]:
             raise ValueError("packaged guest differs")
+        if hashlib.sha256(z.read("assets/generated/keymaps/en-us")).hexdigest()!=identity["keymap_sha256"]:
+            raise ValueError("packaged keymap differs")
         notices=z.read("assets/generated/licenses.txt").decode()
         if "GNU GENERAL PUBLIC LICENSE" not in notices or "GLib" not in notices and "glib" not in notices:
             raise ValueError("missing bundled license notice")

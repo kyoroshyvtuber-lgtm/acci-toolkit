@@ -105,4 +105,6 @@ if [[ "$abi" != linux ]]; then
   "$tool/llvm-readelf" -h -l -d "/work/dist/$abi/libacci_qemu.so" > "/work/dist/$abi/elf.txt"
 fi
 cp "$qemu/COPYING" "/work/dist/$abi/QEMU-COPYING"
-(cd "/work/dist/$abi"; sha256sum libacci_qemu.so > SHA256SUMS)
+mkdir -p "/work/dist/$abi/keymaps"
+cp "$qemu/pc-bios/keymaps/en-us" "/work/dist/$abi/keymaps/en-us"
+(cd "/work/dist/$abi"; sha256sum libacci_qemu.so keymaps/en-us > SHA256SUMS)

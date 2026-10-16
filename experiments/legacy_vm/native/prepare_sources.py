@@ -92,6 +92,18 @@ def patch_qemu(q, android):
         replace_once(q / relative, "#include <openssl/aes.h>", '#include "crypto/aes.h"')
     replace_once(q / "include/hw/arm/ipod_touch_sha1.h", "#include <openssl/sha.h>", "#include <glib.h>")
     replace_once(q / "include/hw/arm/ipod_touch_sha1.h", "    SHA_CTX ctx;", "    /* Digest state is local to each request. */")
+    replace_once(q / "hw/arm/ipod_touch_sha1.c",
+                 "static uint64_t swapLong(void *X) {\n    uint64_t x = (uint64_t) X;",
+                 "static uint64_t swapLong(uint64_t x) {")
+    replace_once(q / "hw/arm/ipod_touch_sha1.c",
+                 "                uint64_t data_length = swapLong(",
+                 "                if (s->buffer_ind < 8 || s->buffer_ind > sizeof(s->buffer)) {\n"
+                 "                    return 0;\n"
+                 "                }\n"
+                 "                uint64_t data_length = swapLong(")
+    replace_once(q / "hw/arm/ipod_touch.c",
+                 "nand_state->nand_path = &nms->nand_path;",
+                 "nand_state->nand_path = nms->nand_path;")
     replace_once(
         q / "hw/arm/ipod_touch_sha1.c",
         "                SHA_CTX ctx;\n                SHA1_Init(&ctx);\n                SHA1_Update(&ctx, s->buffer, data_length);\n                SHA1_Final(s->hashout, &ctx);",

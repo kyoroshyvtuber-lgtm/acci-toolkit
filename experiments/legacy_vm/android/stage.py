@@ -11,8 +11,8 @@ import zipfile
 from elf_check import inspect
 
 
-def checked(path, checksum_file):
-    name = path.name
+def checked(path, checksum_file, name=None):
+    name = name or path.name
     entries = {}
     for line in checksum_file.read_text().splitlines():
         digest, filename = line.split(maxsplit=1)
@@ -47,6 +47,10 @@ def main(repo, artifacts, downloads, out, commit, run_url):
     if linux_evidence.get("ios") is not False or not linux_evidence.get("uart_input") or not linux_evidence.get("frame_changed_after_key"):
         raise ValueError("missing actual Linux guest evidence")
     shutil.copy2(guest,assets/"smoke.elf")
+    keymap = artifacts/"legacy-native-linux/linux/keymaps/en-us"
+    identity["keymap_sha256"] = checked(keymap,keymap.parent.parent/"SHA256SUMS","keymaps/en-us")
+    (assets/"keymaps").mkdir(exist_ok=True)
+    shutil.copy2(keymap,assets/"keymaps/en-us")
     identity["linux_smoke"] = linux_evidence
     (assets/"build-identity.json").write_text(json.dumps(identity,indent=2)+"\n")
     (out/"BUILD-IDENTITY.json").write_text(json.dumps(identity,indent=2)+"\n")

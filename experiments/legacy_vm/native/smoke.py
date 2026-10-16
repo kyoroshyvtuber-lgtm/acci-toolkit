@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import socket
+import shutil
 import struct
 import subprocess
 import time
@@ -110,8 +111,9 @@ def wait_for(predicate, process, seconds=30):
 def main(binary, guest, output):
     binary, guest, output = Path(binary).resolve(), Path(guest).resolve(), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    empty = output / "empty"
-    empty.mkdir(exist_ok=True)
+    data = output / "data"
+    (data / "keymaps").mkdir(parents=True, exist_ok=True)
+    shutil.copy2(binary.parent / "keymaps/en-us", data / "keymaps/en-us")
     rfb_path = output / "rfb.sock"
     if len(os.fsencode(rfb_path)) > 100:
         raise ValueError("socket path too long")
@@ -120,7 +122,7 @@ def main(binary, guest, output):
         str(binary), "-M", "versatilepb", "-m", "64M", "-accel", "tcg,thread=single",
         "-kernel", str(guest), "-nodefaults", "-nic", "none",
         "-display", "none", "-vnc", "unix:" + str(rfb_path),
-        "-monitor", "none", "-serial", "file:" + str(uart), "-L", str(empty), "-no-reboot",
+        "-monitor", "none", "-serial", "file:" + str(uart), "-L", str(data), "-no-reboot",
     ]
     client = None
     with (output / "engine.log").open("wb") as log:

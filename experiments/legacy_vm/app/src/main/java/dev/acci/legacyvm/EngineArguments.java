@@ -15,7 +15,7 @@ public final class EngineArguments {
         List<String> args = new ArrayList<>();
         Collections.addAll(args, path(executable), "-nodefaults", "-nic", "none",
             "-display", "none", "-vnc", "unix:" + path(new File(run, "vnc.sock")),
-            "-monitor", "none", "-serial", "stdio", "-L", path(new File(run, "empty")),
+            "-monitor", "none", "-serial", "stdio", "-L", path(new File(run, "data")),
             "-no-reboot", "-accel", "tcg,thread=single");
         if (profile == null) {
             Collections.addAll(args, "-M", "versatilepb", "-m", "64M", "-kernel", path(guest));
