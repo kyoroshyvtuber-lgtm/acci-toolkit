@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 import shutil
 import tarfile
@@ -24,31 +25,59 @@ def extract(archive, destination):
         members = t.getmembers()
         if len(members) > 150000 or sum(m.size for m in members) > 512 * 1024**2:
             raise ValueError("source archive limits exceeded")
-        roots = set()
+        roots, paths, links = set(), set(), set()
         for m in members:
             name = Path(m.name)
             target = (destination / name).resolve()
-            if name.is_absolute() or not target.is_relative_to(destination):
+            if not name.parts or name.is_absolute() or ".." in name.parts or not target.is_relative_to(destination):
                 raise ValueError("unsafe archive path")
-            if m.isdev() or m.isfifo():
+            if not (m.isfile() or m.isdir() or m.issym() or m.islnk()):
                 raise ValueError("special archive entry")
+            if str(name) in paths:
+                raise ValueError("duplicate source path")
+            paths.add(str(name))
             roots.add(name.parts[0])
             if m.issym():
+                links.add(str(name))
                 link = (target.parent / m.linkname).resolve()
-                if not link.is_relative_to(destination):
+                if Path(m.linkname).is_absolute() or not link.is_relative_to(destination):
                     raise ValueError("unsafe source symlink")
             if m.islnk():
+                links.add(str(name))
                 link = (destination / m.linkname).resolve()
-                if not link.is_relative_to(destination):
+                if Path(m.linkname).is_absolute() or not link.is_relative_to(destination):
                     raise ValueError("unsafe source hardlink")
         if len(roots) != 1:
             raise ValueError("expected one source root")
-        if hasattr(tarfile, "data_filter"):
-            t.extractall(destination, filter="data")
-        else:
-            # The complete pinned archive was checked above. Build container
-            # has no credentials/network and only its output mount is writable.
-            t.extractall(destination)
+        for m in members:
+            if any(str(p) in links for p in Path(m.name).parents):
+                raise ValueError("archive member under a source link")
+        # Write ordinary files first and links last. No ownership restoration,
+        # special entries, overwrites, or writes through archive-created links.
+        # This also avoids differing tarfile data-filter backports on Python
+        # 3.10/3.13 interpreting valid relative source links differently.
+        for m in members:
+            target = destination / m.name
+            if m.isdir():
+                target.mkdir(parents=True, exist_ok=True)
+            elif m.isfile():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with t.extractfile(m) as source, target.open("xb") as dest:
+                    shutil.copyfileobj(source, dest)
+                target.chmod(0o755 if m.mode & 0o100 else 0o644)
+        for m in members:
+            target = destination / m.name
+            if m.issym():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                os.symlink(m.linkname, target)
+            elif m.islnk():
+                source = (destination / m.linkname).resolve()
+                if not source.is_relative_to(destination) or not source.is_file():
+                    raise ValueError("unsafe source hardlink target")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with source.open("rb") as src, target.open("xb") as dest:
+                    shutil.copyfileobj(src, dest)
+                target.chmod(source.stat().st_mode & 0o755)
     return destination / next(iter(roots))
 
 

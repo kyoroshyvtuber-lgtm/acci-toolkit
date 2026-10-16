@@ -33,6 +33,8 @@ jobs:
           fi
           test -f "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
           cat "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
+      - name: Test source extraction guards
+        run: python3 -m unittest discover -s experiments/legacy_vm/tests -v
       - name: Download and verify pinned open-source archives
         run: python3 experiments/legacy_vm/native/fetch_sources.py experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/downloads"
       - name: Create isolated build container
