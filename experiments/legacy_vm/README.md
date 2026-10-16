@@ -41,6 +41,8 @@ The linked emulator is **GPL-2.0**, not MIT; GLib is LGPL-2.1-or-later.
 libffi and pixman are permissive; libfdt uses its upstream BSD/GPL dual license.
 The Android gettext fallback proxy-libintl is LGPL-2.0-or-later.
 The pinned Berkeley floating-point test submodules are BSD-3-Clause.
+The APK includes the NDK's open-source C++ shared runtime with its notices;
+the exact per-ABI runtime hashes and NDK revision are recorded and checked.
 Preserve upstream notices and provide complete corresponding source/build
 recipes alongside any distributed APK. See the source lock and archived
 upstream license files. No Apple firmware, apps, logos or account data belong in

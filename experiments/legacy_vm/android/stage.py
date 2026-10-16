@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -23,7 +24,7 @@ def checked(path, checksum_file, name=None):
     return actual
 
 
-def main(repo, artifacts, downloads, out, commit, run_url):
+def main(repo, artifacts, downloads, out, commit, run_url, ndk):
     project = repo / "experiments/legacy_vm"
     out.mkdir(parents=True, exist_ok=True)
     assets = project / "app/src/main/assets/generated"
@@ -31,16 +32,33 @@ def main(repo, artifacts, downloads, out, commit, run_url):
     identity = {"schema": 1, "app_source_commit": commit, "run_url": run_url,
                 "qemu_commit": json.loads((project/"sources.lock.json").read_text())["qemu_commit"],
                 "ios_boot_verified": False, "safari_verified": False, "native": {}}
+    def revision(path):
+        match = re.search(r"^Pkg\.Revision\s*=\s*(\S+)", path.read_text(), re.M)
+        if not match: raise ValueError("missing NDK revision")
+        return match[1]
+    ndk_revision = revision(ndk/"source.properties")
+    if ndk_revision != "29.0.14206865":
+        raise ValueError("this build pins NDK 29.0.14206865")
     for abi, machine in [("arm64-v8a",183),("x86_64",62)]:
         source = artifacts / ("legacy-native-" + abi)
         binary = source / abi / "libacci_qemu.so"
         checked(binary, source/abi/"SHA256SUMS")
-        audit = inspect(binary,machine)
+        # Satisfy the actual ELF dependency, rather than relaxing the check for
+        # an absent runtime or assuming a compiler flag produced a static link.
+        triple = "aarch64-linux-android" if abi == "arm64-v8a" else "x86_64-linux-android"
+        runtime = ndk/"toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib"/triple/"libc++_shared.so"
+        runtime_audit = inspect(runtime,machine,shared=True)
+        if revision(source/abi/"ndk-source.properties") != ndk_revision:
+            raise ValueError("native engine and C++ runtime use different NDK revisions")
+        audit = inspect(binary,machine,bundled={"libc++_shared.so"})
+        audit["bundled_libraries"] = {"libc++_shared.so": runtime_audit}
+        audit["ndk_revision"] = ndk_revision
         audit["native_build_commit"] = (source/"source-commit.txt").read_text().strip()
         identity["native"][abi] = audit
         target = project / "app/src/main/jniLibs" / abi
         target.mkdir(parents=True, exist_ok=True)
         shutil.copy2(binary, target/binary.name)
+        shutil.copy2(runtime, target/runtime.name)
     guest = artifacts/"legacy-native-linux/guest/smoke.elf"
     identity["guest_sha256"] = checked(guest,guest.parent/"SHA256SUMS")
     linux_evidence = json.loads((artifacts/"legacy-native-linux/smoke/evidence.json").read_text())
@@ -119,4 +137,5 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     for name in ("repo","artifacts","downloads","out"): p.add_argument(name,type=Path)
     p.add_argument("commit"); p.add_argument("run_url")
-    a = p.parse_args(); main(a.repo,a.artifacts,a.downloads,a.out,a.commit,a.run_url)
+    p.add_argument("ndk",type=Path)
+    a = p.parse_args(); main(a.repo,a.artifacts,a.downloads,a.out,a.commit,a.run_url,a.ndk)

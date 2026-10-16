@@ -5,7 +5,7 @@ from pathlib import Path
 import struct
 
 
-def inspect(path, machine):
+def inspect(path, machine, *, shared=False, bundled=()):
     data = Path(path).read_bytes()
     if data[:6] != b"\x7fELF\x02\x01":
         raise ValueError("expected little-endian ELF64")
@@ -29,8 +29,9 @@ def inspect(path, machine):
             interpreter = data[offset:offset+size].rstrip(b"\0").decode("ascii")
         if kind == 2:
             dynamic = (offset, size)
-    if not loads or interpreter != "/system/bin/linker64" or not dynamic:
-        raise ValueError("not an Android PIE executable")
+    invalid_interpreter = interpreter is not None if shared else interpreter != "/system/bin/linker64"
+    if not loads or not dynamic or invalid_interpreter:
+        raise ValueError("not the expected Android shared library / PIE executable")
     needed, strtab = [], None
     for at in range(dynamic[0], dynamic[0]+dynamic[1], 16):
         tag, value = struct.unpack_from("<QQ", data, at)
@@ -49,7 +50,7 @@ def inspect(path, machine):
         if end < start: raise ValueError("invalid library name")
         libraries.append(data[start:end].decode("ascii"))
     allowed = {"libc.so", "libm.so", "libdl.so", "libz.so", "liblog.so", "libandroid.so"}
-    if set(libraries) - allowed:
+    if set(libraries) - allowed - set(bundled):
         raise ValueError("unbundled or non-system dependencies: " + repr(libraries))
     return {"sha256": hashlib.sha256(data).hexdigest(), "machine": actual_machine,
             "interpreter": interpreter, "load_alignments": [x[3] for x in loads],

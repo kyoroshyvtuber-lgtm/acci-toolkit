@@ -85,6 +85,9 @@ public final class EngineController {
             builder.environment().put("HOME", run.getAbsolutePath());
             builder.environment().put("TMPDIR", run.getAbsolutePath());
             builder.environment().put("LANG", "C");
+            // Only installer-owned, read-only APK native libraries are searched.
+            // Never a user profile directory or a writable guest filesystem.
+            builder.environment().put("LD_LIBRARY_PATH", context.getApplicationInfo().nativeLibraryDir);
             process = builder.start();
             if (stopRequested) { process.destroy(); return; }
             reader = new Thread(this::readLog, "acci-uart"); reader.start();

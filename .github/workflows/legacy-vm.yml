@@ -74,7 +74,7 @@ jobs:
         shell: bash
         run: |
           if [ ! -d "$ANDROID_HOME/ndk/$NDK_VERSION" ]; then
-            yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" >/dev/null
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" </dev/null >/dev/null
           fi
           test -f "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
           cat "$ANDROID_HOME/ndk/$NDK_VERSION/source.properties"
@@ -138,6 +138,8 @@ jobs:
     needs: [native, android-unit]
     runs-on: ubuntu-24.04
     timeout-minutes: 35
+    env:
+      NDK_VERSION: 29.0.14206865
     steps:
       - uses: actions/checkout@v4
         with:
@@ -157,10 +159,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [ ! -d "$ANDROID_HOME/ndk/$NDK_VERSION" ]; then
+            "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" </dev/null >/dev/null
+          fi
           python3 experiments/legacy_vm/native/fetch_sources.py experiments/legacy_vm/sources.lock.json "$RUNNER_TEMP/downloads"
           python3 experiments/legacy_vm/android/stage.py "$GITHUB_WORKSPACE" \
             "$RUNNER_TEMP/native-artifacts" "$RUNNER_TEMP/downloads" "$RUNNER_TEMP/delivery" \
-            "$GITHUB_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            "$GITHUB_SHA" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            "$ANDROID_HOME/ndk/$NDK_VERSION"
       - name: Unit tests, lint and APK build
         working-directory: experiments/legacy_vm
         run: gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug

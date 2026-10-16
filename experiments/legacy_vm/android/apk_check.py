@@ -21,7 +21,14 @@ def check(apk, output):
             if z.getinfo(name).compress_type != zipfile.ZIP_DEFLATED:
                 raise ValueError("native library must be extracted from compressed APK")
             with tempfile.TemporaryDirectory() as tmp:
-                file=Path(tmp)/"engine";file.write_bytes(data);inspect(file,machine)
+                file=Path(tmp)/"engine";file.write_bytes(data);inspect(file,machine,bundled={"libc++_shared.so"})
+                runtime_name=f"lib/{abi}/libc++_shared.so"
+                runtime=z.read(runtime_name)
+                expected=identity["native"][abi]["bundled_libraries"]["libc++_shared.so"]["sha256"]
+                if hashlib.sha256(runtime).hexdigest()!=expected: raise ValueError("packaged C++ runtime differs")
+                file.write_bytes(runtime);inspect(file,machine,shared=True)
+                if z.getinfo(runtime_name).compress_type != zipfile.ZIP_DEFLATED:
+                    raise ValueError("runtime must use native library extraction")
         if hashlib.sha256(z.read("assets/generated/smoke.elf")).hexdigest()!=identity["guest_sha256"]:
             raise ValueError("packaged guest differs")
         if hashlib.sha256(z.read("assets/generated/keymaps/en-us")).hexdigest()!=identity["keymap_sha256"]:

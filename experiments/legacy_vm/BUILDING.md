@@ -61,7 +61,7 @@ for ABI in linux arm64-v8a x86_64; do
 done
 cp -a "$W/work/dist/guest" "$W/work/dist/smoke" "$W/artifacts/legacy-native-linux/"
 python3 "$P/android/stage.py" "$PWD" "$W/artifacts" "$W/downloads" "$W/output" \
-  "$(git rev-parse HEAD)" "local-build"
+  "$(git rev-parse HEAD)" "local-build" "$NDK"
 cd "$P"
 gradle --no-daemon :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
 ```
@@ -70,6 +70,13 @@ Use a new writable work directory for each native source build: extraction
 intentionally refuses to overwrite an existing tree. Do not run it against the
 operator's credential directory. Generated JNI binaries and assets are ignored
 by Git; never commit proprietary firmware.
+
+The APK also bundles the same NDK's `libc++_shared.so` for each ABI. Its bytes,
+dependencies and 16 KiB LOAD alignment are audited, not silently assumed to be
+part of Android. QEMU searches only the installer-owned native library
+directory. Toolchain revision, runtime SHA-256 values and complete NDK notices
+are included in the build identity / source bundle. No runtime download is
+needed on the phone.
 
 The resulting debug APK is `app/build/outputs/apk/debug/app-debug.apk`.
 Inspect it with SDK `apksigner verify --verbose --print-certs` and `aapt dump

@@ -17,7 +17,7 @@ android {
     packaging {
         jniLibs {
             useLegacyPackaging = true
-            keepDebugSymbols += ["**/libacci_qemu.so"]
+            keepDebugSymbols += ["**/libacci_qemu.so", "**/libc++_shared.so"]
         }
     }
     compileOptions {
