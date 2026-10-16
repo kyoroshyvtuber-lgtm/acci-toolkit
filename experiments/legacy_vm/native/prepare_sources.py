@@ -129,6 +129,10 @@ def prepare(lock, downloads, output, android=False):
     q = roots["qemu"]
     (q / "ui/keycodemapdb").rmdir()
     shutil.copytree(roots["keycodemapdb"], q / "ui/keycodemapdb")
+    for source in ("softfloat", "testfloat"):
+        target = q / "tests/fp" / ("berkeley-" + source + "-3")
+        target.rmdir()
+        shutil.copytree(roots[source], target)
     shutil.copytree(roots["proxy-libintl"], roots["glib"] / "subprojects/proxy-libintl")
     patch_qemu(q, android)
     result = {k: str(v) for k, v in roots.items()}

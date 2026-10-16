@@ -78,7 +78,7 @@ Version: 1.7.0
 Libs: -L$prefix/lib -lfdt
 Cflags: -I$prefix/include
 EOF
-  extra=(--cpu="$cpu" --cross-prefix="$tool/$triple-" --cc="$CC" --cxx="$CXX" --ar="$AR" \
+  extra=(--cpu="$cpu" --cross-prefix="$tool/$triple-" --cc="$CC" --cxx="$CXX" \
     --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib $LDFLAGS" \
     --with-coroutine=sigaltstack)
 fi

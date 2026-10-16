@@ -57,6 +57,22 @@
       "filename": "proxy-libintl.tar.gz",
       "sha256": "2f35907628e8ea59b82a8bbf0390783d77a750c84cee190072ce95d956eb4d1d",
       "license": "LGPL-2.0-or-later"
+    },
+    {
+      "name": "softfloat",
+      "version": "b64af41c3276f97f0e181920400ee056b9c88037",
+      "url": "https://codeload.github.com/qemu/berkeley-softfloat-3/legacy.tar.gz/b64af41c3276f97f0e181920400ee056b9c88037",
+      "filename": "softfloat.tar.gz",
+      "sha256": "a91e567085545f4a9b8068f5c59d7bfc077793ffdba9fd23ece937bc4cec2ca2",
+      "license": "BSD-3-Clause; testing dependency"
+    },
+    {
+      "name": "testfloat",
+      "version": "5a59dcec19327396a011a17fd924aed4fec416b3",
+      "url": "https://codeload.github.com/qemu/berkeley-testfloat-3/legacy.tar.gz/5a59dcec19327396a011a17fd924aed4fec416b3",
+      "filename": "testfloat.tar.gz",
+      "sha256": "8c7e6094276f645cd08bafbfa45cd09336c91d60576d9b11973c1e4b1ea3a5d9",
+      "license": "BSD-3-Clause; testing dependency"
     }
   ]
 }
